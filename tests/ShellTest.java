@@ -24,7 +24,7 @@ public final class ShellTest {
         long start = System.nanoTime();
         Shell.Result timeout = Shell.run(child("sleep"), 200, TimeUnit.MILLISECONDS);
         long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-        check(!timeout.ok() && timeout.out.contains("timed out"), "silent process times out");
+        check(!timeout.ok() && timeout.out.contains("超时"), "silent process times out");
         check(elapsed < 5000, "timeout must not wait for EOF: " + elapsed + "ms");
         System.out.println("ok ShellTest");
     }
