@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Static package checks for App Clone. No Android SDK, JDK, or device required."""
+import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -36,10 +37,12 @@ def test_scope_is_system():
 
 
 def test_source_link_is_public():
-    url = "https://github.com/doccstat/appclone"
-    assert url in (ROOT / "README.md").read_text()
-    assert url in (ROOT / "src/com/lixingchi/appclone/MainActivity.java").read_text()
-    assert url in (ROOT / "src/com/lixingchi/appclone/SettingsActivity.java").read_text()
+    # README keeps pointing at upstream; the app links to the build it came from.
+    upstream = "https://github.com/doccstat/appclone"
+    assert upstream in (ROOT / "README.md").read_text()
+    fork = "https://github.com/gugugugugu-cmd/appclone"
+    assert fork in (ROOT / "src/com/lixingchi/appclone/MainActivity.java").read_text()
+    assert fork in (ROOT / "src/com/lixingchi/appclone/SettingsActivity.java").read_text()
 
 
 def test_build_self_check_package():
@@ -61,7 +64,8 @@ def test_lifecycle_entrypoints():
     assert "LaunchActivity.class" in (source / "CloneDetailActivity.java").read_text()
     assert "LaunchActivity.class" in (source / "Shortcuts.java").read_text()
     main = (source / "MainActivity.java").read_text()
-    assert 'clone.running ? "Stop" : "Start"' in main
+    # The fork localises this label; match the structure, not the wording.
+    assert re.search(r'clone\.running \? "[^"]+" : "[^"]+"', main)
     assert "Clones.setRunning(id, running)" in main
     for workflow in ("android.yml", "release.yml"):
         assert "build.py --self-check" in (ROOT / ".github/workflows" / workflow).read_text()

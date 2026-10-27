@@ -45,13 +45,13 @@ public final class SettingsActivity extends Activity {
         });
         head.addView(back);
         LinearLayout titles = Ui.column(this);
-        titles.addView(Ui.text(this, "Settings", 24, R.color.ink, true));
-        titles.addView(Ui.text(this, "Profiles and shortcuts", 13,
+        titles.addView(Ui.text(this, "设置", 24, R.color.ink, true));
+        titles.addView(Ui.text(this, "分身与快捷方式", 13,
                 R.color.muted, false), Ui.margins(this, 0, 2, 0, 0));
         head.addView(titles, Ui.weight(1));
         root.addView(head);
 
-        root.addView(Ui.label(this, "After reboot"), Ui.margins(this, 0, 26, 0, 8));
+        root.addView(Ui.label(this, "重启后"), Ui.margins(this, 0, 26, 0, 8));
         BootPolicy boot = BootPolicy.get(this);
         RadioGroup bootChoices = new RadioGroup(this);
         for (int i = 0; i < BootPolicy.VALUES.length; i++) {
@@ -63,9 +63,9 @@ public final class SettingsActivity extends Activity {
         }
         root.addView(bootChoices);
         root.addView(Ui.text(this,
-                "Applies once, at least 10 seconds after the main user unlocks after reboot; Android may delay it. "
-                        + "System default leaves profiles alone. Stop all preserves data but pauses notifications. "
-                        + "Root must already be granted and available at boot. Start and shortcuts still work afterward.",
+                "重启后主用户解锁至少 10 秒才执行一次，系统可能再延后。"
+                        + "默认不干预；全部停止会保留数据但暂停通知。"
+                        + "开机时 Root 必须已授权可用，之后启动和快捷方式照常能用。",
                 13, R.color.muted, false));
         bootStatus = Ui.text(this, boot.status(), 12, R.color.muted, false);
         root.addView(bootStatus, Ui.margins(this, 0, 8, 0, 0));
@@ -77,25 +77,25 @@ public final class SettingsActivity extends Activity {
                 JobScheduler jobs = getSystemService(JobScheduler.class);
                 if (jobs != null) jobs.cancel(BootReceiver.JOB_ID);
             } catch (RuntimeException error) {
-                new AlertDialog.Builder(this).setTitle("Could not save reboot setting")
-                        .setMessage(error.toString()).setPositiveButton("Close", null).show();
-                bootStatus.setText("Reboot setting could not be saved. Select it again to retry.");
+                new AlertDialog.Builder(this).setTitle("无法保存重启设置")
+                        .setMessage(error.toString()).setPositiveButton("关闭", null).show();
+                bootStatus.setText("重启设置保存失败，请重新选择一次。");
                 group.clearCheck();
                 return;
             }
             bootStatus.setText(boot.status());
         });
 
-        root.addView(Ui.label(this, "Shortcut labels"), Ui.margins(this, 0, 26, 0, 8));
+        root.addView(Ui.label(this, "快捷方式名称"), Ui.margins(this, 0, 26, 0, 8));
 
         prefix = new Switch(this);
         prefix.setChecked(Settings.prefix(this));
         LinearLayout prefixRow = Ui.row(this);
         prefixRow.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
         LinearLayout prefixText = Ui.column(this);
-        prefixText.addView(Ui.text(this, "Prefix clone app names", 16, R.color.ink, false));
+        prefixText.addView(Ui.text(this, "在应用名前加分身编号", 16, R.color.ink, false));
         prefixText.addView(Ui.text(this,
-                "Put the clone id before the app name, so cloned shortcuts are distinguishable.",
+                "在应用名前面加上分身编号，方便区分各个分身的快捷方式。",
                 13, R.color.muted, false));
         prefixRow.addView(prefixText, Ui.weight(1));
         prefixRow.addView(prefix);
@@ -103,14 +103,14 @@ public final class SettingsActivity extends Activity {
 
         root.addView(Ui.divider(this));
 
-        root.addView(Ui.label(this, "Format"), Ui.margins(this, 0, 18, 0, 6));
+        root.addView(Ui.label(this, "命名格式"), Ui.margins(this, 0, 18, 0, 6));
         format = new EditText(this);
         format.setSingleLine(true);
         format.setText(Settings.format(this));
         root.addView(format);
         root.addView(Ui.text(this,
-                "Tokens: {id} clone user id \u00b7 {name} app name \u00b7 {clone} clone name. "
-                        + "Colons and other characters are allowed.",
+                "可用变量：{id} 分身编号 · {name} 应用名 · {clone} 分身名称。"
+                        + "冒号和其他字符都可以直接使用。",
                 12, R.color.muted, false), Ui.margins(this, 0, 6, 0, 0));
         tokenRow = Ui.row(this);
         tokenRow.addView(tokenButton("{id}"));
@@ -122,38 +122,37 @@ public final class SettingsActivity extends Activity {
 
         root.addView(Ui.divider(this, 0, 20));
 
-        root.addView(Ui.label(this, "Automation"), Ui.margins(this, 0, 18, 0, 8));
+        root.addView(Ui.label(this, "自动化"), Ui.margins(this, 0, 18, 0, 8));
 
         autoPin = new Switch(this);
         autoPin.setChecked(Settings.autoPin(this));
         LinearLayout autoRow = Ui.row(this);
         autoRow.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
         LinearLayout autoText = Ui.column(this);
-        autoText.addView(Ui.text(this, "Auto-pin new clone apps", 16, R.color.ink, false));
+        autoText.addView(Ui.text(this, "自动固定新装分身应用", 16, R.color.ink, false));
         autoText.addView(Ui.text(this,
-                "Request a home-screen shortcut as each app is added to a clone. "
-                        + "The launcher still asks you to confirm.",
+                "每往分身里加一个应用就请求一个桌面快捷方式。"
+                        + "仍需在桌面上确认一次。",
                 13, R.color.muted, false));
         autoRow.addView(autoText, Ui.weight(1));
         autoRow.addView(autoPin);
         root.addView(autoRow);
 
         root.addView(Ui.text(this,
-                "Labels apply to shortcuts created from now on. Re-pin an existing shortcut "
-                        + "to update its name.",
+                "名称只对之后创建的快捷方式生效，已有的需要重新固定一次。",
                 12, R.color.muted, false), Ui.margins(this, 0, 20, 0, 0));
 
         root.addView(Ui.divider(this, 0, 24));
-        root.addView(Ui.label(this, "About"), Ui.margins(this, 0, 18, 0, 6));
+        root.addView(Ui.label(this, "关于"), Ui.margins(this, 0, 18, 0, 6));
         root.addView(Ui.text(this, "App Clone " + versionName(), 15, R.color.ink, false));
-        TextView source = Ui.text(this, "Source code \u00b7 github.com/doccstat/appclone",
+        TextView source = Ui.text(this, "Source code \u00b7 github.com/gugugugugu-cmd/appclone",
                 13, R.color.accent, false);
         source.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
         source.setBackground(Ui.selectable(this));
         source.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/doccstat/appclone")));
+                        Uri.parse("https://github.com/gugugugugu-cmd/appclone")));
             }
         });
         root.addView(source, Ui.margins(this, 0, 4, 0, 0));

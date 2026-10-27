@@ -48,7 +48,7 @@ public final class MainActivity extends Activity {
         LinearLayout head = Ui.row(this);
         LinearLayout titles = Ui.column(this);
         titles.addView(Ui.text(this, "App Clone", 24, R.color.ink, true));
-        titles.addView(Ui.text(this, "Run apps in separate users", 13,
+        titles.addView(Ui.text(this, "让应用跑在独立用户里", 13,
                 R.color.muted, false), Ui.margins(this, 0, 2, 0, 0));
         head.addView(titles, Ui.weight(1));
         Button more = Ui.quiet(this, "\u22ee");
@@ -74,7 +74,7 @@ public final class MainActivity extends Activity {
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        Button create = Ui.primary(this, "+  New profile");
+        Button create = Ui.primary(this, "＋ 新建分身");
         create.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showCreate(); }
         });
@@ -90,7 +90,7 @@ public final class MainActivity extends Activity {
     private void refresh() {
         if (loading) return;
         loading = true;
-        status.setText("Reading clones\u2026");
+        status.setText("正在读取分身…");
         new Thread(new Runnable() {
             @Override public void run() {
                 final List<Clones.Clone> found = Clones.list();
@@ -132,8 +132,8 @@ public final class MainActivity extends Activity {
     private View empty() {
         LinearLayout box = Ui.column(this);
         box.setPadding(0, Ui.dp(this, 40), 0, 0);
-        box.addView(Ui.text(this, "No profiles yet", 18, R.color.ink, true));
-        box.addView(Ui.text(this, "Create a clone profile, then choose the apps to install into it.",
+        box.addView(Ui.text(this, "还没有分身", 18, R.color.ink, true));
+        box.addView(Ui.text(this, "先建一个分身，再勾选要装进去的应用。",
                 14, R.color.muted, false), Ui.margins(this, 0, 6, 0, 0));
         return box;
     }
@@ -141,14 +141,14 @@ public final class MainActivity extends Activity {
     private View footer() {
         LinearLayout box = Ui.column(this);
         box.setPadding(0, Ui.dp(this, 24), 0, 0);
-        TextView link = Ui.text(this, "Source code \u00b7 github.com/doccstat/appclone",
+        TextView link = Ui.text(this, "Source code \u00b7 github.com/gugugugugu-cmd/appclone",
                 13, R.color.accent, false);
         link.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 12));
         link.setBackground(Ui.selectable(this));
         link.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/doccstat/appclone")));
+                        Uri.parse("https://github.com/gugugugugu-cmd/appclone")));
             }
         });
         box.addView(link);
@@ -164,22 +164,22 @@ public final class MainActivity extends Activity {
 
         LinearLayout texts = Ui.column(this);
         texts.addView(Ui.text(this, clone.name, 16, R.color.ink, true));
-        texts.addView(Ui.text(this, "User " + clone.id + " \u00b7 "
-                        + (clone.running ? "Running" : "Stopped"), 13,
+        texts.addView(Ui.text(this, "用户 " + clone.id + " · "
+                        + (clone.running ? "运行中" : "已停止"), 13,
                 clone.running ? R.color.accent : R.color.muted, false));
         item.addView(texts, Ui.weightWithStart(this, 1, 14));
 
-        Button power = Ui.quiet(this, clone.running ? "Stop" : "Start");
-        power.setContentDescription((clone.running ? "Stop " : "Start ") + clone.name
-                + ", user " + clone.id);
+        Button power = Ui.quiet(this, clone.running ? "停止" : "启动");
+        power.setContentDescription((clone.running ? "停止 " : "启动 ") + clone.name
+                + "，用户 " + clone.id);
         power.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 if (clone.running) {
                     new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Stop " + clone.name + "?")
+                            .setTitle("停止 " + clone.name + "？")
                             .setMessage("Stops all apps and notifications in this profile without deleting data. "
                                     + "Start or opening an app restarts it. Settings controls what happens after reboot.")
-                            .setNegativeButton("Cancel", null)
+                            .setNegativeButton("取消", null)
                             .setPositiveButton("Stop", (dialog, which) -> setRunning(clone.id, false))
                             .show();
                 } else {
@@ -202,7 +202,7 @@ public final class MainActivity extends Activity {
 
     private void setRunning(final int id, final boolean running) {
         stateProgress = new ProgressDialog(this);
-        stateProgress.setMessage(running ? "Starting profile\u2026" : "Stopping profile\u2026");
+        stateProgress.setMessage(running ? "正在启动分身…" : "正在停止分身…");
         stateProgress.setCancelable(false);
         stateProgress.show();
         new Thread(() -> {
@@ -212,9 +212,9 @@ public final class MainActivity extends Activity {
                 stateProgress.dismiss();
                 if (!result.ok()) {
                     new AlertDialog.Builder(this)
-                            .setTitle(running ? "Could not start profile" : "Could not stop profile")
-                            .setMessage(result.trim().isEmpty() ? "Root command failed." : result.trim())
-                            .setPositiveButton("Close", null)
+                            .setTitle(running ? "无法启动分身" : "无法停止分身")
+                            .setMessage(result.trim().isEmpty() ? "Root 命令执行失败。" : result.trim())
+                            .setPositiveButton("关闭", null)
                             .show();
                 }
                 refresh();
@@ -229,10 +229,10 @@ public final class MainActivity extends Activity {
 
     private void showMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
-        menu.getMenu().add(0, 1, 0, "Settings");
-        menu.getMenu().add(0, 2, 1, "Pin a shortcut");
-        menu.getMenu().add(0, 3, 2, "Delete all profiles");
-        menu.getMenu().add(0, 4, 3, "Export diagnostics");
+        menu.getMenu().add(0, 1, 0, "设置");
+        menu.getMenu().add(0, 2, 1, "固定快捷方式");
+        menu.getMenu().add(0, 3, 2, "删除全部分身");
+        menu.getMenu().add(0, 4, 3, "导出诊断信息");
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override public boolean onMenuItemClick(MenuItem item) {
                 if (item.getItemId() == 1) {
@@ -241,7 +241,7 @@ public final class MainActivity extends Activity {
                     pickShortcut();
                 } else if (item.getItemId() == 3) {
                     if (clones.isEmpty()) {
-                        Toast.makeText(MainActivity.this, "No clones to delete",
+                        Toast.makeText(MainActivity.this, "没有可删除的分身",
                                 Toast.LENGTH_SHORT).show();
                     } else {
                         confirmDeleteAll();
@@ -260,27 +260,27 @@ public final class MainActivity extends Activity {
     private void showCreate() {
         LinearLayout form = Ui.column(this);
         form.setPadding(Ui.dp(this, 24), Ui.dp(this, 8), Ui.dp(this, 24), 0);
-        form.addView(Ui.label(this, "Name"));
+        form.addView(Ui.label(this, "名称"));
         final EditText name = new EditText(this);
         name.setText(defaultName());
         name.setSingleLine(true);
         form.addView(name);
-        form.addView(Ui.label(this, "How many"), Ui.margins(this, 0, 18, 0, 0));
+        form.addView(Ui.label(this, "数量"), Ui.margins(this, 0, 18, 0, 0));
         final EditText count = new EditText(this);
         count.setText("1");
         count.setInputType(InputType.TYPE_CLASS_NUMBER);
         count.setSingleLine(true);
         form.addView(count);
         final CheckBox append = new CheckBox(this);
-        append.setText("Append -1, -2, \u2026 to names");
+        append.setText("在名称后追加 -1、-2 …");
         append.setChecked(false);
         form.addView(append);
 
         new AlertDialog.Builder(this)
-                .setTitle("New profile")
+                .setTitle("新建分身")
                 .setView(form)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Create", new DialogInterface.OnClickListener() {
+                .setNegativeButton("取消", null)
+                .setPositiveButton("创建", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         int howMany;
                         try {
@@ -289,7 +289,7 @@ public final class MainActivity extends Activity {
                             howMany = 1;
                         }
                         String typed = name.getText().toString().trim();
-                        create(typed.isEmpty() ? "Clone" : typed, clamp(howMany), append.isChecked());
+                        create(typed.isEmpty() ? "分身" : typed, clamp(howMany), append.isChecked());
                     }
                 })
                 .show();
@@ -300,7 +300,7 @@ public final class MainActivity extends Activity {
     }
 
     private String defaultName() {
-        return "Clone Profile";
+        return "分身";
     }
 
     /** Highest existing {@code base-N} suffix plus one, so a second batch does not reuse names. */
@@ -316,7 +316,7 @@ public final class MainActivity extends Activity {
 
     private void create(final String base, final int howMany, final boolean append) {
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Creating " + (howMany == 1 ? "clone" : howMany + " clones") + "\u2026");
+        progress.setMessage("正在创建分身（" + howMany + "）…");
         progress.setCancelable(false);
         progress.show();
         final int start = append ? nextIndex(base) : 0;
@@ -342,7 +342,7 @@ public final class MainActivity extends Activity {
                             showCreateFailure(madeFinal, failureFinal);
                         } else {
                             Toast.makeText(MainActivity.this,
-                                    madeFinal + (madeFinal == 1 ? " profile created" : " profiles created"),
+                                    madeFinal + " 个分身已创建",
                                     Toast.LENGTH_LONG).show();
                         }
                         refresh();
@@ -357,9 +357,9 @@ public final class MainActivity extends Activity {
                 + " created before the failure.\n\n" : "")
                 + error + "\n\nExport the diagnostics file and attach it to the issue.";
         new AlertDialog.Builder(this)
-                .setTitle("Clone creation failed")
+                .setTitle("分身创建失败")
                 .setMessage(message)
-                .setPositiveButton("Export logs", new DialogInterface.OnClickListener() {
+                .setPositiveButton("导出日志", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         exportDiagnostics();
                     }
@@ -370,7 +370,7 @@ public final class MainActivity extends Activity {
 
     private void exportDiagnostics() {
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Collecting diagnostics\u2026");
+        progress.setMessage("正在收集诊断信息…");
         progress.setCancelable(false);
         progress.show();
         new Thread(new Runnable() {
@@ -473,7 +473,7 @@ public final class MainActivity extends Activity {
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Delete all profiles?")
                 .setView(form)
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("取消", null)
                 .setPositiveButton("Delete all", null)
                 .create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {

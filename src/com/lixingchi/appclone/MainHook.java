@@ -32,7 +32,12 @@ public final class MainHook implements IXposedHookLoadPackage {
         ok += tryInstall("max running users", () -> hookMaxRunningUsers(cl));
         ok += tryInstall("clone total fallback", () -> hookCanAddMoreUsersOfType(cl));
         ok += tryInstall("clone profile fallback", () -> hookCanAddMoreProfilesToUser(cl));
-        XposedBridge.log(TAG + "hooks installed: " + ok + "/5 sdk=" + Build.VERSION.SDK_INT);
+        ok += tryInstall("launcher visibility", () -> {
+            if (LauncherFilter.install(cl) < 2) {
+                throw new NoSuchMethodError("package service launcher queries");
+            }
+        });
+        XposedBridge.log(TAG + "hooks installed: " + ok + "/6 sdk=" + Build.VERSION.SDK_INT);
     }
 
     private interface Hook {

@@ -35,8 +35,8 @@ public final class LaunchActivity extends Activity {
                 } else {
                     new AlertDialog.Builder(this)
                             .setTitle("Could not open clone app")
-                            .setMessage(result.trim().isEmpty() ? "Root command failed." : result.trim())
-                            .setPositiveButton("Close", null)
+                            .setMessage(result.trim().isEmpty() ? "Root 命令执行失败。" : result.trim())
+                            .setPositiveButton("关闭", null)
                             .setOnDismissListener(dialog -> finish())
                             .show();
                 }

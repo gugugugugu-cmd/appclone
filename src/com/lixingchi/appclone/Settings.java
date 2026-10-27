@@ -3,12 +3,33 @@ package com.lixingchi.appclone;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.Set;
+
 /** Preferences for shortcut labels and automation. */
 final class Settings {
     private static final String NAME = "shortcuts";
     private static final String PREFIX = "prefix";
     private static final String FORMAT = "format";
     private static final String AUTO_PIN = "auto_pin";
+    /** Per-clone allow list of apps that stay visible in that clone's launcher. */
+    private static final String VISIBLE = "visible_";
+
+    /**
+     * Packages chosen for one clone, or null when the clone has no allow list yet.
+     * Null means "show everything", so a clone that was never configured keeps
+     * working exactly as it did before this option existed.
+     */
+    static Set<String> visibleApps(Context context, int userId) {
+        return get(context).getStringSet(VISIBLE + userId, null);
+    }
+
+    static void visibleApps(Context context, int userId, Set<String> packages) {
+        get(context).edit().putStringSet(VISIBLE + userId, packages).apply();
+    }
+
+    static boolean hasVisibleApps(Context context, int userId) {
+        return visibleApps(context, userId) != null;
+    }
 
     private static SharedPreferences get(Context context) {
         return context.getSharedPreferences(NAME, Context.MODE_PRIVATE);

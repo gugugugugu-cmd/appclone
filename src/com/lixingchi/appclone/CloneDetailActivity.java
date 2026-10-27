@@ -39,7 +39,7 @@ public final class CloneDetailActivity extends Activity {
         super.onCreate(state);
         userId = getIntent().getIntExtra(EXTRA_ID, -1);
         userName = getIntent().getStringExtra(EXTRA_NAME);
-        if (userName == null) userName = "Clone";
+        if (userName == null) userName = "分身";
 
         LinearLayout root = Ui.column(this);
         Ui.applyInsets(root, 20, 22, 20, 16);
@@ -48,11 +48,12 @@ public final class CloneDetailActivity extends Activity {
         head.addView(Ui.avatar(this, String.valueOf(userId)));
         LinearLayout titles = Ui.column(this);
         titles.addView(Ui.text(this, userName, 22, R.color.ink, true));
-        status = Ui.text(this, "User " + userId, 13, R.color.muted, false);
+        status = Ui.text(this, "用户 " + userId, 13, R.color.muted, false);
         titles.addView(status);
         head.addView(titles, Ui.weightWithStart(this, 1, 14));
         root.addView(head);
-        root.addView(Ui.label(this, "Apps"), Ui.margins(this, 0, 22, 0, 6));
+        root.addView(Ui.label(this, "应用（勾选的项目才会出现在该分身的桌面）"),
+                Ui.margins(this, 0, 22, 0, 6));
 
         ListView list = new ListView(this);
         list.setDivider(new android.graphics.drawable.InsetDrawable(
@@ -65,7 +66,7 @@ public final class CloneDetailActivity extends Activity {
         root.addView(list, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        Button delete = Ui.quietDanger(this, "Delete clone");
+        Button delete = Ui.quietDanger(this, "删除分身");
         delete.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { confirmDelete(); }
         });
@@ -81,7 +82,7 @@ public final class CloneDetailActivity extends Activity {
     private void load() {
         if (loading || userId < 0) return;
         loading = true;
-        status.setText("User " + userId + " \u00b7 reading apps\u2026");
+        status.setText("用户 " + userId + " · 正在读取应用…");
         new Thread(new Runnable() {
             @Override public void run() {
                 final List<Apps.App> found = Apps.launcherApps(CloneDetailActivity.this, getPackageName());
@@ -104,7 +105,9 @@ public final class CloneDetailActivity extends Activity {
     private void updateStatus() {
         int count = 0;
         for (Apps.App app : apps) if (installed.contains(app.pkg)) count++;
-        status.setText("User " + userId + " \u00b7 " + count + " of " + apps.size() + " apps installed");
+        status.setText("用户 " + userId + " · 已安装 " + count + "/" + apps.size() + " 个应用"
+                + (Settings.hasVisibleApps(CloneDetailActivity.this, userId)
+                ? " · 桌面仅显示勾选项" : ""));
     }
 
     private void toggle(final Apps.App app, final boolean want) {
@@ -121,13 +124,22 @@ public final class CloneDetailActivity extends Activity {
                         if (result.ok()) {
                             if (want) {
                                 installed.add(app.pkg);
+                                // The app the user just picked belongs on the clone's
+                                // home screen; anything that merely came along with it
+                                // stays out of the drawer.
+                                choose(app.pkg, true);
                                 if (Settings.autoPin(CloneDetailActivity.this)) {
                                     Shortcuts.pin(CloneDetailActivity.this,
                                             new CloneApps.Target(userId, userName, app));
                                 }
                             } else {
                                 installed.remove(app.pkg);
+                                choose(app.pkg, false);
                             }
+                        } else if (want && result.out.contains("already installed")) {
+                            // Installed before this option existed: the package is
+                            // there, but it is not yet on the clone's allow list.
+                            choose(app.pkg, true);
                         } else {
                             Toast.makeText(CloneDetailActivity.this,
                                     app.label + ": " + firstLine(result.out), Toast.LENGTH_LONG).show();
@@ -140,12 +152,22 @@ public final class CloneDetailActivity extends Activity {
         }, "clone-app").start();
     }
 
+    /** Adds or removes one package from this clone's launcher allow list. */
+    private void choose(String pkg, boolean visible) {
+        Set<String> chosen = new HashSet<>();
+        Set<String> current = Settings.visibleApps(CloneDetailActivity.this, userId);
+        if (current != null) chosen.addAll(current);
+        if (visible) chosen.add(pkg);
+        else chosen.remove(pkg);
+        Settings.visibleApps(CloneDetailActivity.this, userId, chosen);
+    }
+
     private void confirmDelete() {
         new AlertDialog.Builder(this)
-                .setTitle("Delete " + userName + "?")
-                .setMessage("Removes this clone profile and all of its app data.")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                .setTitle("删除 " + userName + "？")
+                .setMessage("将删除这个分身及其全部应用数据。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("删除", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) { delete(); }
                 })
                 .show();
@@ -153,7 +175,7 @@ public final class CloneDetailActivity extends Activity {
 
     private void delete() {
         final ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Deleting\u2026");
+        progress.setMessage("正在删除…");
         progress.setCancelable(false);
         progress.show();
         new Thread(new Runnable() {
@@ -209,7 +231,7 @@ public final class CloneDetailActivity extends Activity {
             check.setFocusable(false);
             label = Ui.text(activity, "", 16, R.color.ink, false);
             meta = Ui.text(activity, "", 12, R.color.muted, false);
-            open = Ui.quiet(activity, "Open");
+            open = Ui.quiet(activity, "打开");
             open.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
             open.setMinHeight(Ui.dp(activity, 40));
             open.setPadding(Ui.dp(activity, 14), 0, Ui.dp(activity, 14), 0);

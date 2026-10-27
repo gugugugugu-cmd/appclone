@@ -25,6 +25,46 @@ Source and support: <https://github.com/doccstat/appclone>.
 | --- | --- | --- |
 | ![Clone profiles and menu](https://raw.githubusercontent.com/Xposed-Modules-Repo/com.lixingchi.appclone/refs/heads/main/docs/screenshots/profiles.png) | ![New profile dialog](https://raw.githubusercontent.com/Xposed-Modules-Repo/com.lixingchi.appclone/refs/heads/main/docs/screenshots/new-profile.png) | ![Creating clone profiles](https://raw.githubusercontent.com/Xposed-Modules-Repo/com.lixingchi.appclone/refs/heads/main/docs/screenshots/creating.png) |
 
+## 中文版改动（本 fork）
+
+本仓库是 [doccstat/appclone](https://github.com/doccstat/appclone) 的 fork，只做两件事：
+
+1. **界面中文化**：主界面、分身详情、设置页全部改成中文。应用名保持 `App Clone` 不变，
+   因此可以直接覆盖安装官方 1.5 版本，数据不丢。
+2. **分身桌面只显示你选择的应用**：往分身里勾选一个应用时，它会同时被加入该分身的
+   「桌面可见清单」。清单之外的包（包括建分身时自动带上的系统「设置」等）不会出现在
+   这个分身的应用抽屉里。
+
+### 为什么需要第 2 项
+
+AOSP 给工作资料/克隆资料自动装上一批必需包（`com.android.settings` 就是其中之一），
+桌面会把它们和你要双开的应用一起列出来。另外，如果克隆里**没有**安装设置，
+`com.android.settings` 的「应用」页面会崩：
+
+```
+java.lang.IllegalStateException: Own package not found for user 10: package=com.android.settings
+```
+
+所以正确做法是「装上但不对桌面可见」，而不是「不装」。
+
+### 实现方式
+
+- `LauncherFilter.java`：在 system_server 里 hook 包服务的
+  `queryIntentActivitiesInternal` / `queryIntentContentProvidersInternal`，
+  只在**调用方是桌面、且目标用户是克隆资料**时过滤。启动请求
+  （`resolveForStart`）和指定包名的查询不受影响，所以快捷方式和跨应用跳转照常工作。
+- `CloneVisibility.java` + `Settings.java`：每个分身一份可见清单。清单不存在时
+  **完全不过滤**，行为与官方一致。
+- 克隆用户里的桌面本身（`com.google.android.apps.nexuslauncher`）永远不被过滤，
+  否则分身无法启动。
+
+### 已知限制
+
+- 桌面包名写死为 `com.google.android.apps.nexuslauncher`。换桌面会失效（只是不过滤，
+  不会出错）。
+- 过滤依赖系统内部方法名，ROM 大改时需要跟着调整。
+- 被隐藏的应用只是不可见，仍然装着、保留数据，从快捷方式或其它应用跳转依旧能打开。
+
 ## Requirements
 
 - Android 13+ (API 33+).

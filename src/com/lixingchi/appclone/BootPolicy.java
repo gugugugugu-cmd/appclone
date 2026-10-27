@@ -17,7 +17,7 @@ final class BootPolicy {
     static final String START = "start";
     static final String STOP = "stop";
     static final String[] VALUES = {SYSTEM, START, STOP};
-    static final String[] LABELS = {"System default", "Start all profiles", "Stop all profiles"};
+    static final String[] LABELS = {"系统默认", "启动全部分身", "停止全部分身"};
     private final SharedPreferences prefs;
 
     BootPolicy(SharedPreferences prefs) {
