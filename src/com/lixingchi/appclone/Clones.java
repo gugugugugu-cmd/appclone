@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.LongConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,7 +98,41 @@ final class Clones {
     }
 
     static Shell.Result setRunning(int id, boolean running, Function<String, Shell.Result> run) {
+        return setRunning(id, running, run, Clones::pause);
+    }
+
+    /** Poll interval while waiting for a state change, in milliseconds. */
+    static final long POLL_MS = 700;
+    /** How long a start may sit in RUNNING_LOCKED before it is called a failure. */
+    static final long UNLOCK_WAIT_MS = 45000;
+    /** How long a stop may keep the user started before it is called a failure. */
+    static final long STOP_WAIT_MS = Shell.STOP_TIMEOUT_SECONDS * 1000;
+
+    /** Default nap between polls. */
+    static void pause(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * Starts or stops one clone and verifies the result.
+     *
+     * <p>Neither direction blocks on {@code -w}: stopping can take over a minute
+     * while vold waits for app files to close, and a start that cannot unlock its
+     * storage never finishes at all. Polling the state instead lets each outcome
+     * be reported for what it is.
+     *
+     * @param nap called between polls; tests pass a no-op.
+     */
+    static Shell.Result setRunning(int id, boolean running, Function<String, Shell.Result> run,
+            LongConsumer nap) {
+        // Reject impossible ids before spending a root command on them.
         if (id <= 0) return new Shell.Result(-1, "不是分身：" + id);
+        String stateCommand = running ? "am get-started-user-state " + id : "am is-user-stopped " + id;
+        String expected = running ? "RUNNING_UNLOCKED" : "true";
         Shell.Result users = run.apply("cmd user list -v");
         if (!users.ok()) return users;
         Clone target = null;
@@ -109,24 +144,48 @@ final class Clones {
         if (target.details.contains("EPHEMERAL")) {
             return new Shell.Result(-1, "无法控制临时分身：停止它可能删除其数据。");
         }
-        String stateCommand = running ? "am get-started-user-state " + id : "am is-user-stopped " + id;
-        String expected = running ? "RUNNING_UNLOCKED" : "true";
         if (running) {
-            Shell.Result state = run.apply(stateCommand);
-            if (!state.ok()) return state;
-            if (expected.equals(state.trim())) return state;
+            Shell.Result pre = run.apply(stateCommand);
+            // A failed query must not be read as "not started yet".
+            if (!pre.ok()) return pre;
+            if (expected.equals(pre.trim())) {
+                return new Shell.Result(0, "分身已在运行。");
+            }
         }
         // -f stops only this profile when its related user 0 cannot be stopped (Android 13+).
-        Shell.Result result = run.apply((running ? "am start-user -w " : "am stop-user -w -f ") + id);
-        if (!result.ok()) return result;
-        // am can exit 0 on failure or an aborted stop; verify the actual state.
-        Shell.Result state = run.apply(stateCommand);
-        if (!state.ok()) return state;
-        if (!expected.equals(state.trim())) {
-            return new Shell.Result(-1, "分身 " + id + (running ? " 还没准备好，请先解锁主用户再重试。"
-                    : " 没有停止成功，请刷新后重试。") + "\n" + result.trim() + "\n" + state.trim());
+        // Without -w so a stuck storage lock cannot hold the caller past its budget.
+        String command = running ? "am start-user " + id : "am stop-user -f " + id;
+        Shell.Result issued = run.apply(command);
+        if (!issued.ok()) return issued;
+        return await(run, stateCommand, expected, id, running, nap);
+    }
+
+    /** Polls until the clone reaches the wanted state, or explains why it did not. */
+    private static Shell.Result await(Function<String, Shell.Result> run, String stateCommand,
+            String expected, int id, boolean running, LongConsumer nap) {
+        long budget = running ? UNLOCK_WAIT_MS : STOP_WAIT_MS;
+        long waited = 0;
+        Shell.Result state = new Shell.Result(-1, "");
+        while (waited <= budget) {
+            if (waited > 0) nap.accept(POLL_MS);
+            state = run.apply(stateCommand);
+            if (state.ok() && expected.equals(state.trim())) return state;
+            waited += POLL_MS;
         }
-        return result;
+        String now = state.out.trim();
+        if (running && "RUNNING_LOCKED".equals(now)) {
+            // Storage never unlocked. Retrying is useless until the device reboots:
+            // the key stayed loaded after an aborted stop, see Shell#STOP_TIMEOUT_SECONDS.
+            return new Shell.Result(-1, "分身 " + id + " 已启动但存储无法解锁（RUNNING_LOCKED）。\n"
+                    + "这通常源于上一次「停止」没能锁住存储。请重启手机后再试；"
+                    + "重启仍然如此时，可在分身详情里删除该分身重建。");
+        }
+        if (!running && "RUNNING_LOCKED".equals(now)) {
+            return new Shell.Result(-1, "分身 " + id + " 已停止应用，但存储仍未锁定完成。\n"
+                    + "等一会儿再试启动即可，不必反复点停止。");
+        }
+        return new Shell.Result(-1, "分身 " + id + (running ? " 启动超时，当前状态：" : " 停止超时，当前状态：")
+                + (now.isEmpty() ? "未知" : now));
     }
 
     static Shell.Result remove(int id) {

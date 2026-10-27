@@ -78,6 +78,15 @@ final class BootPolicy {
     }
 
     void apply(long run, String mode, BooleanSupplier keepGoing, Function<String, Shell.Result> shell) {
+        apply(run, mode, keepGoing, shell, Clones::pause);
+    }
+
+    /**
+     * @param nap called between polls while a clone starts or stops; the reboot
+     *            path passes the real sleep, tests pass a no-op.
+     */
+    void apply(long run, String mode, BooleanSupplier keepGoing,
+            Function<String, Shell.Result> shell, java.util.function.LongConsumer nap) {
         if (!current(run, mode) || !keepGoing.getAsBoolean()) return;
         Set<String> pending = prefs.getStringSet("pending", null);
         if (pending == null) {
@@ -103,7 +112,7 @@ final class BootPolicy {
             Shell.Result result;
             synchronized (Clones.class) {
                 if (!current(run, mode) || !keepGoing.getAsBoolean()) return;
-                result = Clones.setRunning(Integer.parseInt(id), START.equals(mode), shell);
+                result = Clones.setRunning(Integer.parseInt(id), START.equals(mode), shell, nap);
             }
             synchronized (BootPolicy.class) {
                 if (!current(run, mode)) return;

@@ -38,7 +38,7 @@ public final class BootPolicyTest {
         Script starting = new Script().then("cmd user list -v", 0, USERS)
                 .then("cmd user list -v", 0, USERS)
                 .then("am get-started-user-state 11", 0, "User is not started: 11")
-                .then("am start-user -w 11", 0, "Success: user started")
+                .then("am start-user 11", 0, "Success: user started")
                 .then("am get-started-user-state 11", 0, "RUNNING_UNLOCKED")
                 .then("cmd user list -v", 0, USERS)
                 .then("am get-started-user-state 12", 0, "RUNNING_UNLOCKED");
@@ -54,7 +54,7 @@ public final class BootPolicyTest {
         boolean[] keepGoing = {true};
         Script first = new Script().then("cmd user list -v", 0, USERS)
                 .then("cmd user list -v", 0, USERS)
-                .then("am stop-user -w -f 11", 0, "")
+                .then("am stop-user -f 11", 0, "")
                 .then("am is-user-stopped 11", 0, "true");
         policy.apply(stop, BootPolicy.STOP, () -> keepGoing[0], command -> {
             Shell.Result result = first.apply(command);
@@ -64,7 +64,7 @@ public final class BootPolicyTest {
         first.done();
         check(policy.status().contains("成功 1，失败 0，待处理 1"), "checkpoint survives scheduler stop");
         Script rest = new Script().then("cmd user list -v", 0, USERS)
-                .then("am stop-user -w -f 12", 0, "")
+                .then("am stop-user -f 12", 0, "")
                 .then("am is-user-stopped 12", 0, "true");
         new BootPolicy(memory.prefs).apply(stop, BootPolicy.STOP, () -> true, rest);
         rest.done();
@@ -74,7 +74,7 @@ public final class BootPolicyTest {
         Script failures = new Script().then("cmd user list -v", 0, USERS)
                 .then("cmd user list -v", 0, USERS.replace("id=11", "id=99"))
                 .then("cmd user list -v", 0, USERS)
-                .then("am stop-user -w -f 12", 0, "")
+                .then("am stop-user -f 12", 0, "")
                 .then("am is-user-stopped 12", 0, "true");
         policy.apply(partial, BootPolicy.STOP, () -> true, failures);
         failures.done();

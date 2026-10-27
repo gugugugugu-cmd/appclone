@@ -3,6 +3,7 @@ package com.lixingchi.appclone;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.LongConsumer;
 
 /** Exercises the real lifecycle/launch paths without root or a device. */
 public final class ProfileLifecycleTest {
@@ -29,53 +30,70 @@ public final class ProfileLifecycleTest {
                 .size() == 2, "type text in a name cannot turn a managed profile into a clone");
 
         Script ready = ready().then(LAUNCH, 0, "Starting: Intent");
-        check(Apps.launch(11, APP, ready).ok(), "running shortcut launches without restarting");
+        check(Apps.launch(11, APP, ready, nap).ok(), "running shortcut launches without restarting");
         ready.done();
 
         Script cold = users().then("am get-started-user-state 11", 0, "User is not started: 11")
-                .then("am start-user -w 11", 0, "Success: user started")
+                .then("am start-user 11", 0, "Success: user started")
                 .then("am get-started-user-state 11", 0, "RUNNING_UNLOCKED")
                 .then(LAUNCH, 0, "Starting: Intent");
-        check(Apps.launch(11, APP, cold).ok(), "stopped shortcut waits before launching");
+        check(Apps.launch(11, APP, cold, nap).ok(), "stopped shortcut waits before launching");
         cold.done();
 
+        // Manual start polls; it must not block on -w, which never returns when
+        // the clone's storage cannot unlock.
         Script start = users().then("am get-started-user-state 11", 0, "RUNNING_UNLOCKING")
-                .then("am start-user -w 11", 0, "Success: user started")
+                .then("am start-user 11", 0, "Success: user started")
                 .then("am get-started-user-state 11", 0, "RUNNING_UNLOCKED");
-        check(Clones.setRunning(11, true, start).ok(), "manual start also waits for unlock");
+        check(Clones.setRunning(11, true, start, nap).ok(), "manual start polls until unlocked");
         start.done();
 
         for (int id : new int[] {11, 12}) {
-            Script stop = users().then("am stop-user -w -f " + id, 0, "")
+            Script stop = users().then("am stop-user -f " + id, 0, "")
+                    .then("am is-user-stopped " + id, 0, "false")
                     .then("am is-user-stopped " + id, 0, "true");
-            check(Clones.setRunning(id, false, stop).ok(), "stop only the selected clone, idempotently");
+            check(Clones.setRunning(id, false, stop, nap).ok(), "stop retries until the user is stopped");
             stop.done();
         }
-        Script aborted = users().then("am stop-user -w -f 12", 0, "")
-                .then("am is-user-stopped 12", 0, "false");
-        check(!Clones.setRunning(12, false, aborted).ok(), "aborted stop is not success");
+        Script aborted = users().then("am stop-user -f 12", 0, "")
+                .repeat("am is-user-stopped 12", 0, "false",
+                        (int) (Clones.STOP_WAIT_MS / Clones.POLL_MS + 1));
+        check(!Clones.setRunning(12, false, aborted, nap).ok(), "a user that keeps running is a failure");
         aborted.done();
-        Script stopFailure = users().then("am stop-user -w -f 12", -1, "Switch failed");
-        check(!Clones.setRunning(12, false, stopFailure).ok(), "stop failure reported");
+        Script stopFailure = users().then("am stop-user -f 12", -1, "Switch failed");
+        check(!Clones.setRunning(12, false, stopFailure, nap).ok(), "stop failure reported");
         stopFailure.done();
 
+        // A clone whose storage stays locked must say so instead of timing out.
+        Script stuckLocked = users()
+                .then("am get-started-user-state 11", 0, "RUNNING_LOCKED")
+                .then("am start-user 11", 0, "Success: user started")
+                .repeat("am get-started-user-state 11", 0, "RUNNING_LOCKED",
+                        (int) (Clones.UNLOCK_WAIT_MS / Clones.POLL_MS + 1));
+        Shell.Result locked = Clones.setRunning(11, true, stuckLocked, nap);
+        check(!locked.ok() && locked.out.contains("RUNNING_LOCKED"), "locked storage is reported");
+        check(stuckLocked.stickyHits > 1, "locked storage is polled more than once");
+        stuckLocked.done();
+
         for (String output : new String[] {"Success: user started", "Error: could not start user"}) {
-            Script locked = users().then("am get-started-user-state 11", 0, "RUNNING_LOCKED")
-                    .then("am start-user -w 11", 0, output)
-                    .then("am get-started-user-state 11", 0, "RUNNING_LOCKED");
-            check(!Apps.launch(11, APP, locked).ok(), "no launch until unlocked, even with exit 0");
-            locked.done();
+            Script stillLocked = users().then("am get-started-user-state 11", 0, "RUNNING_LOCKED")
+                    .then("am start-user 11", 0, output)
+                    .repeat("am get-started-user-state 11", 0, "RUNNING_LOCKED",
+                        (int) (Clones.UNLOCK_WAIT_MS / Clones.POLL_MS + 1));
+            check(!Apps.launch(11, APP, stillLocked, nap).ok(), "no launch until unlocked, even with exit 0");
+            stillLocked.done();
         }
         Script timeout = users().then("am get-started-user-state 11", 0, "User is not started: 11")
-                .then("am start-user -w 11", -1, "Root command timed out");
+                .then("am start-user 11", -1, "Root 命令超时");
         check(!Apps.launch(11, APP, timeout).ok(), "timeout prevents launch");
         timeout.done();
         Script stateFailure = users().then("am get-started-user-state 11", 1, "Permission denied");
         check(!Apps.launch(11, APP, stateFailure).ok(), "failed query prevents launch");
         stateFailure.done();
         Script afterStartFailure = users().then("am get-started-user-state 11", 0, "RUNNING_LOCKED")
-                .then("am start-user -w 11", 0, "Success: user started")
-                .then("am get-started-user-state 11", 1, "Permission denied");
+                .then("am start-user 11", 0, "Success: user started")
+                .repeat("am get-started-user-state 11", 1, "Permission denied",
+                        (int) (Clones.UNLOCK_WAIT_MS / Clones.POLL_MS + 1));
         check(!Apps.launch(11, APP, afterStartFailure).ok(), "failed verification prevents launch");
         afterStartFailure.done();
         Script denied = new Script().then("cmd user list -v", 1, USERS);
@@ -93,29 +111,32 @@ public final class ProfileLifecycleTest {
                 USERS.replace("PROFILE|INITIALIZED", "PROFILE|INITIALIZED|EPHEMERAL")}) {
             for (boolean running : new boolean[] {true, false}) {
                 Script invalid = new Script().then("cmd user list -v", 0, unsafe);
-                check(!Clones.setRunning(11, running, invalid).ok(), "reject unsafe lifecycle target");
+                check(!Clones.setRunning(11, running, invalid, nap).ok(), "reject unsafe lifecycle target");
                 invalid.done();
             }
         }
 
         for (String error : new String[] {"Error: Activity not started", "Starting: Intent\nError type 3\nMissing activity"}) {
             Script missing = ready().then(LAUNCH, 0, error);
-            check(!Apps.launch(11, APP, missing).ok(), "am launch error with exit 0 is reported");
+            check(!Apps.launch(11, APP, missing, nap).ok(), "am launch error with exit 0 is reported");
             missing.done();
         }
         Script warning = ready().then(LAUNCH, 0, "Warning: Activity not started, intent delivered to running instance.");
-        check(Apps.launch(11, APP, warning).ok(), "already open is success");
+        check(Apps.launch(11, APP, warning, nap).ok(), "already open is success");
         warning.done();
         Script invalidApp = new Script();
-        check(!Apps.launch(11, new Apps.App("", null, ".Main"), invalidApp).ok(), "missing package");
-        check(!Apps.launch(11, new Apps.App("", "com.example", ""), invalidApp).ok(), "empty activity");
+        check(!Apps.launch(11, new Apps.App("", null, ".Main"), invalidApp, nap).ok(), "missing package");
+        check(!Apps.launch(11, new Apps.App("", "com.example", ""), invalidApp, nap).ok(), "empty activity");
         invalidApp.done();
         Script quoted = ready().then(LAUNCH.replace("/.Main'", "/.Main'\\''; echo unsafe'"), 1, "Invalid component");
-        check(!Apps.launch(11, new Apps.App("", APP.pkg, ".Main'; echo unsafe"), quoted).ok(),
+        check(!Apps.launch(11, new Apps.App("", APP.pkg, ".Main'; echo unsafe"), quoted, nap).ok(),
                 "exported shortcut component stays one quoted shell argument");
         quoted.done();
         System.out.println("ok ProfileLifecycleTest");
     }
+
+    /** Polls must not actually sleep during tests. */
+    static final LongConsumer nap = millis -> { };
 
     private static Script users() {
         return new Script().then("cmd user list -v", 0, USERS);
@@ -128,6 +149,11 @@ public final class ProfileLifecycleTest {
     private static final class Script implements Function<String, Shell.Result> {
         final ArrayDeque<String> commands = new ArrayDeque<>();
         final ArrayDeque<Shell.Result> results = new ArrayDeque<>();
+        /** Sticky answer used once the queued commands run out, for polling loops. */
+        String stickyCommand;
+        Shell.Result stickyResult;
+        /** How many polls the sticky answer may serve. */
+        int stickyTimes;
 
         Script then(String command, int code, String output) {
             commands.add(command);
@@ -135,11 +161,33 @@ public final class ProfileLifecycleTest {
             return this;
         }
 
+        /** Answers {@code command} with {@code output} for up to {@code times} polls. */
+        Script repeat(String command, int code, String output) {
+            return repeat(command, code, output, Integer.MAX_VALUE);
+        }
+
+        Script repeat(String command, int code, String output, int times) {
+            stickyCommand = command;
+            stickyResult = new Shell.Result(code, output);
+            stickyTimes = times;
+            return this;
+        }
+
+        /** Number of polls the sticky answer served, for assertions. */
+        int stickyHits;
+
         @Override public Shell.Result apply(String command) {
-            check(!commands.isEmpty(), "unexpected command: " + command);
-            String expected = commands.remove();
-            check(expected.equals(command), "expected " + expected + ", got " + command);
-            return results.remove();
+            // Queued answers win; the sticky one serves the polls that follow.
+            if (!commands.isEmpty()) {
+                String expected = commands.remove();
+                check(expected.equals(command), "expected " + expected + ", got " + command);
+                return results.remove();
+            }
+            check(command.equals(stickyCommand), "unexpected command: " + command
+                    + " [queue was empty, sticky=" + stickyCommand + ", hits=" + stickyHits + "]");
+            check(stickyHits < stickyTimes, "poll budget exhausted, extra: " + command);
+            stickyHits++;
+            return stickyResult;
         }
 
         void done() {

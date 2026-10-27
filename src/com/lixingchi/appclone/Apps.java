@@ -71,10 +71,15 @@ final class Apps {
     }
 
     static Shell.Result launch(int userId, App app, Function<String, Shell.Result> run) {
+        return launch(userId, app, run, Clones::pause);
+    }
+
+    static Shell.Result launch(int userId, App app, Function<String, Shell.Result> run,
+            java.util.function.LongConsumer nap) {
         if (app.pkg == null || app.pkg.isEmpty() || app.activity == null || app.activity.isEmpty()) {
             return new Shell.Result(-1, "快捷方式无效。");
         }
-        Shell.Result started = Clones.setRunning(userId, true, run);
+        Shell.Result started = Clones.setRunning(userId, true, run, nap);
         if (!started.ok()) return started;
         Shell.Result result = run.apply("am start --user " + userId
                 + " -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "

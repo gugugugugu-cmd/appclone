@@ -26,9 +26,21 @@ final class Shell {
     }
 
     private static final long TIMEOUT_SECONDS = 30;
+    /**
+     * Stopping a user waits for its encrypted storage to lock. vold keeps
+     * retrying while app files stay open and has been measured waiting over 99
+     * seconds before giving up, so the generic 30 s budget is far too short: the
+     * caller gave up while the system was still mutating the user, which is how
+     * a clone ends up half-stopped and unable to unlock again.
+     */
+    static final long STOP_TIMEOUT_SECONDS = 180;
 
     static Result root(String command) {
-        return run(new ProcessBuilder("su", "-c", command), TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        return root(command, TIMEOUT_SECONDS);
+    }
+
+    static Result root(String command, long timeoutSeconds) {
+        return run(new ProcessBuilder("su", "-c", command), timeoutSeconds, TimeUnit.SECONDS);
     }
 
     static Result run(ProcessBuilder command, long timeout, TimeUnit unit) {
