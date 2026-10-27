@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Values taken from Miuix (HyperOS) color system, non-Monet light scheme. -->
 <resources>
-    <!-- MIUI X: light neutrals, HyperOS blue, large soft cards. -->
-    <color name="paper">#FFF2F3F5</color>
+    <!-- background / onBackground -->
+    <color name="paper">#FFFFFFFF</color>
+    <!-- surface -->
+    <color name="paper_surface">#FFF7F7F7</color>
+    <!-- surfaceContainer -->
     <color name="surface">#FFFFFFFF</color>
-    <color name="ink">#FF0F1216</color>
-    <color name="muted">#FF8A8F98</color>
-    <color name="line">#FFEDEEF1</color>
+    <color name="ink">#FF000000</color>
+    <!-- onBackgroundVariant -->
+    <color name="muted">#FF8C93B0</color>
+    <!-- dividerLine -->
+    <color name="line">#FFE0E0E0</color>
+    <!-- primary -->
     <color name="accent">#FF3482FF</color>
-    <color name="accent_tint">#1F3482FF</color>
+    <!-- tertiaryContainer -->
+    <color name="accent_tint">#FFEAF2FF</color>
     <color name="on_accent">#FFFFFFFF</color>
-    <color name="danger">#FFE24C4B</color>
+    <!-- error -->
+    <color name="danger">#FFE94634</color>
     <color name="ripple">#14000000</color>
-    <color name="field">#FFF5F6F8</color>
+    <!-- surfaceContainerHigh: InputField background -->
+    <color name="field">#FFE8E8E8</color>
+    <!-- secondaryContainer: quiet button / chip fill -->
+    <color name="secondary_container">#FFF0F0F0</color>
+    <color name="outline">#FFD9D9D9</color>
 </resources>

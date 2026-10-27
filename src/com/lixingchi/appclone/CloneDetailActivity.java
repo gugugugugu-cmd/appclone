@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -28,10 +29,16 @@ public final class CloneDetailActivity extends Activity {
 
     private int userId;
     private String userName;
+    /** Every launcher app on the device; the adapter shows {@link #shown}. */
     private final List<Apps.App> apps = new ArrayList<>();
+    /** Apps currently listed, after the search box filters them. */
+    private final List<Apps.App> shown = new ArrayList<>();
+    /** Lower-cased search text; empty lists everything. */
+    private String query = "";
     private final Set<String> installed = new HashSet<>();
     private final Set<String> busy = new HashSet<>();
     private AppAdapter adapter;
+    private TextView emptyHint;
     private TextView status;
     private boolean loading;
 
@@ -52,8 +59,19 @@ public final class CloneDetailActivity extends Activity {
         titles.addView(status);
         head.addView(titles, Ui.weightWithStart(this, 1, 14));
         root.addView(head);
+        // Miuix SearchBar sits above the app list, not on the clone list screen.
+        final EditText search = Ui.searchWithIcon(this, "搜索应用名称或包名");
+        search.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable text) {
+                query = text.toString().trim().toLowerCase(java.util.Locale.ROOT);
+                applyFilter();
+            }
+        });
+        root.addView(search, Ui.margins(this, 0, 18, 0, 0));
         root.addView(Ui.label(this, "应用（勾选的项目才会出现在该分身的桌面）"),
-                Ui.margins(this, 4, 22, 0, 8));
+                Ui.margins(this, 4, 16, 0, 8));
 
         ListView list = new ListView(this);
         list.setDivider(new android.graphics.drawable.InsetDrawable(
@@ -63,8 +81,14 @@ public final class CloneDetailActivity extends Activity {
         list.setSelector(Ui.selectable(this));
         adapter = new AppAdapter();
         list.setAdapter(adapter);
-        root.addView(list, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        emptyHint = Ui.text(this, "没有匹配的应用", 14, R.color.muted, false);
+        emptyHint.setVisibility(View.GONE);
+        root.addView(emptyHint, Ui.margins(this, 4, 6, 0, 6));
+        list.setBackground(Ui.card(this));
+        list.setClipToOutline(true);
+        root.addView(list, Ui.margins(this, 0, 2, 0, 8));
+        ((LinearLayout.LayoutParams) list.getLayoutParams()).height = 0;
+        ((LinearLayout.LayoutParams) list.getLayoutParams()).weight = 1f;
 
         Button delete = Ui.quietDanger(this, "删除分身");
         delete.setOnClickListener(new View.OnClickListener() {
@@ -94,12 +118,28 @@ public final class CloneDetailActivity extends Activity {
                         apps.addAll(found);
                         installed.clear();
                         installed.addAll(have);
-                        adapter.notifyDataSetChanged();
+                        applyFilter();
                         updateStatus();
                     }
                 });
             }
         }, "clone-apps").start();
+    }
+
+    /** Rebuilds the visible list for the current query and refreshes the adapter. */
+    private void applyFilter() {
+        shown.clear();
+        for (Apps.App app : apps) {
+            if (query.isEmpty()
+                    || app.label.toLowerCase(java.util.Locale.ROOT).contains(query)
+                    || app.pkg.toLowerCase(java.util.Locale.ROOT).contains(query)) {
+                shown.add(app);
+            }
+        }
+        if (emptyHint != null) {
+            emptyHint.setVisibility(shown.isEmpty() && !apps.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+        if (adapter != null) adapter.notifyDataSetChanged();
     }
 
     private void updateStatus() {
@@ -197,9 +237,9 @@ public final class CloneDetailActivity extends Activity {
     }
 
     private final class AppAdapter extends BaseAdapter {
-        @Override public int getCount() { return apps.size(); }
-        @Override public Apps.App getItem(int position) { return apps.get(position); }
-        @Override public long getItemId(int position) { return apps.get(position).pkg.hashCode(); }
+        @Override public int getCount() { return shown.size(); }
+        @Override public Apps.App getItem(int position) { return shown.get(position); }
+        @Override public long getItemId(int position) { return shown.get(position).pkg.hashCode(); }
         @Override public boolean hasStableIds() { return true; }
 
         @Override public View getView(int position, View convertView, ViewGroup parent) {
@@ -211,7 +251,7 @@ public final class CloneDetailActivity extends Activity {
             } else {
                 row = (AppRow) convertView.getTag();
             }
-            row.bind(apps.get(position));
+            row.bind(shown.get(position));
             return convertView;
         }
     }

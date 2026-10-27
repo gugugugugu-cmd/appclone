@@ -81,9 +81,11 @@ final class Ui {
         return button;
     }
 
+    /** Miuix secondary button: secondaryContainer fill, primary-coloured text. */
     static Button quiet(Context context, CharSequence value) {
         Button button = button(context, value, R.color.accent, false);
-        button.setBackground(selectable(context));
+        button.setBackground(rounded(context, R.color.secondary_container, 999));
+        button.setPadding(dp(context, 16), 0, dp(context, 16), 0);
         return button;
     }
 
@@ -131,7 +133,7 @@ final class Ui {
     static Drawable card(Context context) {
         GradientDrawable drawable = new GradientDrawable();
         drawable.setColor(context.getColor(R.color.surface));
-        drawable.setCornerRadius(dp(context, 18));
+        drawable.setCornerRadius(dp(context, 16));
         return drawable;
     }
 
@@ -144,20 +146,35 @@ final class Ui {
     }
 
     /**
-     * MIUI X search field: pill, filled with {@code R.color.field}, hint text,
-     * single line, no underline. The caller sets the listener.
+     * Miuix SearchBar InputField: 45dp pill, 17sp label, leading magnifier at
+     * 16dp start and 8dp end, filled with surfaceContainerHigh.
      */
     static EditText search(Context context, CharSequence hint) {
         EditText view = new EditText(context);
         view.setHint(hint);
         view.setSingleLine(true);
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
         view.setTextColor(context.getColor(R.color.ink));
         view.setHintTextColor(context.getColor(R.color.muted));
         view.setBackground(shape(context, R.color.field, 999));
-        view.setPadding(dp(context, 18), dp(context, 11), dp(context, 18), dp(context, 11));
-        view.setCompoundDrawablePadding(dp(context, 10));
+        // Miuix: search icon starts at 16dp, text after a 8dp gap, 45dp tall.
+        view.setPadding(dp(context, 16), 0, dp(context, 16), 0);
+        view.setMinHeight(dp(context, 45));
+        view.setIncludeFontPadding(false);
         view.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
+        view.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        return view;
+    }
+
+    /**
+     * Miuix search pill with the leading magnifier drawn in. Keep this separate
+     * from {@link #search} so callers that add their own drawable still work.
+     */
+    static EditText searchWithIcon(Context context, CharSequence hint) {
+        EditText view = search(context, hint);
+        view.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_search, 0, 0, 0);
+        view.setCompoundDrawablePadding(dp(context, 8));
+        view.setPadding(dp(context, 12), 0, dp(context, 16), 0);
         return view;
     }
 

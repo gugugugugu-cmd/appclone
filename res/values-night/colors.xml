@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Values taken from Miuix (HyperOS) color system, non-Monet dark scheme. -->
 <resources>
-    <!-- MIUI X dark: near-black sheets, HyperOS blue. -->
-    <color name="paper">#FF000000</color>
-    <color name="surface">#FF1B1C1F</color>
-    <color name="ink">#FFF2F3F5</color>
-    <color name="muted">#FF7E838C</color>
-    <color name="line">#FF2A2C30</color>
-    <color name="accent">#FF4E8CFF</color>
-    <color name="accent_tint">#334E8CFF</color>
+    <color name="paper">#FF242424</color>
+    <color name="paper_surface">#FF000000</color>
+    <color name="surface">#FF242424</color>
+    <color name="ink">#E6FFFFFF</color>
+    <color name="muted">#FF787E96</color>
+    <color name="line">#FF393939</color>
+    <color name="accent">#FF277AF7</color>
+    <color name="accent_tint">#FF2B3B54</color>
     <color name="on_accent">#FFFFFFFF</color>
-    <color name="danger">#FFFF6B6A</color>
+    <color name="danger">#FFF12522</color>
     <color name="ripple">#22FFFFFF</color>
-    <color name="field">#FF24262A</color>
+    <color name="field">#FF242424</color>
+    <color name="secondary_container">#FF434343</color>
+    <color name="outline">#FF404040</color>
 </resources>
