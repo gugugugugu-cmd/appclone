@@ -41,7 +41,7 @@ final class Clones {
         Shell.Result result = Shell.root("cmd user list -v");
         if (!result.ok()) {
             lastError = result.trim().isEmpty()
-                    ? "Root needed: allow App Clone in your root manager" : result.trim();
+                    ? "需要 Root：请在 Root 管理器里允许 App Clone" : result.trim();
             return new ArrayList<>();
         }
         return parse(result.out);
@@ -97,17 +97,17 @@ final class Clones {
     }
 
     static Shell.Result setRunning(int id, boolean running, Function<String, Shell.Result> run) {
-        if (id <= 0) return new Shell.Result(-1, "Not a clone profile: " + id);
+        if (id <= 0) return new Shell.Result(-1, "不是分身：" + id);
         Shell.Result users = run.apply("cmd user list -v");
         if (!users.ok()) return users;
         Clone target = null;
         for (Clone clone : parse(users.out)) if (clone.id == id) target = clone;
-        if (target == null) return new Shell.Result(-1, "Clone profile no longer exists: " + id);
+        if (target == null) return new Shell.Result(-1, "分身已不存在：" + id);
         if (!target.details.contains("(parentId=0)")) {
-            return new Shell.Result(-1, "Only clone profiles belonging to user 0 can be started or stopped.");
+            return new Shell.Result(-1, "只能启动或停止属于主用户（用户 0）的分身。");
         }
         if (target.details.contains("EPHEMERAL")) {
-            return new Shell.Result(-1, "Cannot control an ephemeral clone: stopping it can delete its data.");
+            return new Shell.Result(-1, "无法控制临时分身：停止它可能删除其数据。");
         }
         String stateCommand = running ? "am get-started-user-state " + id : "am is-user-stopped " + id;
         String expected = running ? "RUNNING_UNLOCKED" : "true";
@@ -123,8 +123,8 @@ final class Clones {
         Shell.Result state = run.apply(stateCommand);
         if (!state.ok()) return state;
         if (!expected.equals(state.trim())) {
-            return new Shell.Result(-1, "Profile " + id + (running ? " is not ready. Unlock the main user and retry."
-                    : " did not stop. Refresh and retry.") + "\n" + result.trim() + "\n" + state.trim());
+            return new Shell.Result(-1, "分身 " + id + (running ? " 还没准备好，请先解锁主用户再重试。"
+                    : " 没有停止成功，请刷新后重试。") + "\n" + result.trim() + "\n" + state.trim());
         }
         return result;
     }

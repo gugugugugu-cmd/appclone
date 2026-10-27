@@ -21,15 +21,15 @@ final class Diagnostics {
                 .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
         out.append("Build: ").append(Build.DISPLAY).append('\n');
         out.append("Fingerprint: ").append(Build.FINGERPRINT).append('\n');
-        out.append("Review this file for personal data before attaching it.\n");
+        out.append("附加到 issue 前请先检查其中是否含个人数据。\n");
 
         BootPolicy boot = BootPolicy.get(context);
-        section(out, "Reboot policy", boot.mode() + "\n" + boot.status());
-        section(out, "Last create error",
-                Clones.lastCreateError == null ? "none this session" : Clones.lastCreateError);
-        section(out, "cmd user list -v", shell("cmd user list -v"));
-        section(out, "dumpsys user", shell("dumpsys user"));
-        section(out, "logcat (filtered)",
+        section(out, "重启策略", boot.mode() + "\n" + boot.status());
+        section(out, "最近一次创建错误",
+                Clones.lastCreateError == null ? "本次会话没有错误" : Clones.lastCreateError);
+        section(out, "用户列表（cmd user list -v）", shell("cmd user list -v"));
+        section(out, "用户服务（dumpsys user）", shell("dumpsys user"));
+        section(out, "日志（已过滤）",
                 filterLogcat(shell("logcat -d -v threadtime -t 4000")));
         return out.toString();
     }

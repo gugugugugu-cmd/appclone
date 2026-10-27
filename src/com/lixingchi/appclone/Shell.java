@@ -50,12 +50,12 @@ final class Shell {
             reader.setDaemon(true);
             reader.start();
             if (!process.waitFor(timeout, unit)) {
-                return new Result(-1, "Root command timed out. Refresh the profile state before retrying.");
+                return new Result(-1, "Root 命令超时，请刷新分身状态后重试。");
             }
             return new Result(process.exitValue(), output.get(1, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new Result(-1, "Root command interrupted. Refresh the profile state before retrying.");
+            return new Result(-1, "Root 命令被中断，请刷新分身状态后重试。");
         } catch (Exception e) {
             return new Result(-1, e.toString());
         } finally {

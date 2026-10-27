@@ -30,7 +30,7 @@ public final class BootReceiver extends BroadcastReceiver {
                     .setExtras(extras).setMinimumLatency(10_000).setOverrideDeadline(30_000).build();
             JobScheduler scheduler = context.getSystemService(JobScheduler.class);
             if (scheduler == null || scheduler.schedule(job) != JobScheduler.RESULT_SUCCESS) {
-                policy.fail(run, mode, "Android could not schedule the job.");
+                policy.fail(run, mode, "系统无法调度该任务。");
             }
         } catch (RuntimeException e) {
             Log.e("AppClone", "Could not schedule reboot action", e);

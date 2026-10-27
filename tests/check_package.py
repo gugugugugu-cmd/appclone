@@ -60,7 +60,8 @@ def test_lifecycle_entrypoints():
     source = ROOT / "src/com/lixingchi/appclone"
     launcher = (source / "LaunchActivity.java").read_text()
     assert launcher.index("new Thread(") < launcher.index("Apps.launch(user, app)")
-    assert "runOnUiThread" in launcher and "Could not open clone app" in launcher
+    # Fork localises the message; match the call sites, not the wording.
+    assert "runOnUiThread" in launcher and "无法打开分身应用" in launcher
     assert "LaunchActivity.class" in (source / "CloneDetailActivity.java").read_text()
     assert "LaunchActivity.class" in (source / "Shortcuts.java").read_text()
     main = (source / "MainActivity.java").read_text()

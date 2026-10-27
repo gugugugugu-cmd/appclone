@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -69,14 +70,14 @@ final class Ui {
     static TextView avatar(Context context, CharSequence value) {
         TextView view = text(context, value, 16, R.color.accent, true);
         view.setGravity(android.view.Gravity.CENTER);
-        view.setBackground(shape(context, R.color.accent_tint, 14));
+        view.setBackground(shape(context, R.color.accent_tint, 12));
         view.setLayoutParams(new LinearLayout.LayoutParams(dp(context, 44), dp(context, 44)));
         return view;
     }
 
     static Button primary(Context context, CharSequence value) {
         Button button = button(context, value, R.color.on_accent, true);
-        button.setBackground(rounded(context, R.color.accent, 14));
+        button.setBackground(rounded(context, R.color.accent, 24));
         return button;
     }
 
@@ -121,6 +122,43 @@ final class Ui {
     static Drawable rounded(Context context, int colorRes, float radiusDp) {
         return new RippleDrawable(ColorStateList.valueOf(context.getColor(R.color.ripple)),
                 shape(context, colorRes, radiusDp), null);
+    }
+
+    /**
+     * MIUI X card: white sheet, generous radius, no border. Rows inside a card
+     * are separated by {@link #divider(Context, int)} instead of card walls.
+     */
+    static Drawable card(Context context) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(context.getColor(R.color.surface));
+        drawable.setCornerRadius(dp(context, 18));
+        return drawable;
+    }
+
+    /** Rounded background for a list or section that holds several rows. */
+    static LinearLayout cardColumn(Context context) {
+        LinearLayout view = column(context);
+        view.setBackground(card(context));
+        view.setClipToOutline(true);
+        return view;
+    }
+
+    /**
+     * MIUI X search field: pill, filled with {@code R.color.field}, hint text,
+     * single line, no underline. The caller sets the listener.
+     */
+    static EditText search(Context context, CharSequence hint) {
+        EditText view = new EditText(context);
+        view.setHint(hint);
+        view.setSingleLine(true);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        view.setTextColor(context.getColor(R.color.ink));
+        view.setHintTextColor(context.getColor(R.color.muted));
+        view.setBackground(shape(context, R.color.field, 999));
+        view.setPadding(dp(context, 18), dp(context, 11), dp(context, 18), dp(context, 11));
+        view.setCompoundDrawablePadding(dp(context, 10));
+        view.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
+        return view;
     }
 
     static Drawable selectable(Context context) {

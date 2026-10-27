@@ -34,6 +34,8 @@ public final class MainActivity extends Activity {
     private LinearLayout list;
     private TextView status;
     private List<Clones.Clone> clones = new ArrayList<>();
+    /** Lower-cased search text; empty shows every clone. */
+    private String query = "";
     private String error;
     private boolean loading;
     private static final int REQUEST_EXPORT = 1;
@@ -63,13 +65,26 @@ public final class MainActivity extends Activity {
         head.addView(more);
         root.addView(head);
 
+        // MIUI X search pill, directly under the title.
+        final EditText search = Ui.search(this, "搜索分身名称或编号");
+        search.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_search, 0, 0, 0);
+        search.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable text) {
+                query = text.toString().trim().toLowerCase(java.util.Locale.ROOT);
+                render();
+            }
+        });
+        root.addView(search, Ui.margins(this, 0, 16, 0, 0));
+
         status = Ui.text(this, "", 13, R.color.muted, false);
-        root.addView(status, Ui.margins(this, 0, 4, 0, 0));
+        root.addView(status, Ui.margins(this, 4, 10, 0, 0));
 
         ScrollView scroll = new ScrollView(this);
         scroll.setClipToPadding(false);
         list = Ui.column(this);
-        list.setPadding(0, Ui.dp(this, 18), 0, Ui.dp(this, 12));
+        list.setPadding(0, Ui.dp(this, 4), 0, Ui.dp(this, 12));
         scroll.addView(list);
         root.addView(scroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -114,19 +129,52 @@ public final class MainActivity extends Activity {
         } else {
             int running = 0;
             for (Clones.Clone clone : clones) if (clone.running) running++;
-            status.setText(clones.size() + (clones.size() == 1 ? " profile" : " profiles")
-                    + " \u00b7 " + running + " running");
+            status.setText(clones.size() + " 个分身 · " + running + " 个运行中");
         }
         if (clones.isEmpty()) {
             list.addView(empty());
             list.addView(footer());
             return;
         }
-        for (int i = 0; i < clones.size(); i++) {
-            if (i > 0) list.addView(Ui.divider(this, 58));
-            list.addView(row(clones.get(i)));
+        List<Clones.Clone> shown = matches();
+        if (shown.isEmpty()) {
+            list.addView(noMatch());
+            list.addView(footer());
+            return;
         }
+        // One card, rows split by hairlines: MIUI X grouping instead of a bare list.
+        LinearLayout card = Ui.cardColumn(this);
+        for (int i = 0; i < shown.size(); i++) {
+            if (i > 0) card.addView(Ui.divider(this, 58));
+            card.addView(row(shown.get(i)));
+        }
+        list.addView(card);
         list.addView(footer());
+    }
+
+    /**
+     * Clones matching the search box. An empty query matches everything; digits
+     * match the clone id, and any other text matches the name case-insensitively.
+     */
+    private List<Clones.Clone> matches() {
+        if (query.isEmpty()) return clones;
+        List<Clones.Clone> found = new ArrayList<>();
+        for (Clones.Clone clone : clones) {
+            if (String.valueOf(clone.id).equals(query)
+                    || clone.name.toLowerCase(java.util.Locale.ROOT).contains(query)) {
+                found.add(clone);
+            }
+        }
+        return found;
+    }
+
+    private View noMatch() {
+        LinearLayout box = Ui.column(this);
+        box.setPadding(0, Ui.dp(this, 40), 0, 0);
+        box.addView(Ui.text(this, "没有匹配的分身", 17, R.color.ink, true));
+        box.addView(Ui.text(this, "换个名称或编号再试。", 14, R.color.muted, false),
+                Ui.margins(this, 0, 6, 0, 0));
+        return box;
     }
 
     private View empty() {
@@ -141,7 +189,7 @@ public final class MainActivity extends Activity {
     private View footer() {
         LinearLayout box = Ui.column(this);
         box.setPadding(0, Ui.dp(this, 24), 0, 0);
-        TextView link = Ui.text(this, "Source code \u00b7 github.com/gugugugugu-cmd/appclone",
+        TextView link = Ui.text(this, "源码 · github.com/gugugugugu-cmd/appclone",
                 13, R.color.accent, false);
         link.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 12));
         link.setBackground(Ui.selectable(this));
@@ -177,10 +225,10 @@ public final class MainActivity extends Activity {
                 if (clone.running) {
                     new AlertDialog.Builder(MainActivity.this)
                             .setTitle("停止 " + clone.name + "？")
-                            .setMessage("Stops all apps and notifications in this profile without deleting data. "
-                                    + "Start or opening an app restarts it. Settings controls what happens after reboot.")
+                            .setMessage("停止这个分身里的所有应用和通知，不会删除数据。"
+                                    + "启动分身或打开任一应用即可恢复，重启后的行为可在设置里调整。")
                             .setNegativeButton("取消", null)
-                            .setPositiveButton("Stop", (dialog, which) -> setRunning(clone.id, false))
+                            .setPositiveButton("停止", (dialog, which) -> setRunning(clone.id, false))
                             .show();
                 } else {
                     setRunning(clone.id, true);
@@ -353,9 +401,8 @@ public final class MainActivity extends Activity {
     }
 
     private void showCreateFailure(int made, String error) {
-        String message = (made > 0 ? made + (made == 1 ? " profile" : " profiles")
-                + " created before the failure.\n\n" : "")
-                + error + "\n\nExport the diagnostics file and attach it to the issue.";
+        String message = (made > 0 ? "失败前已创建 " + made + " 个分身。\n\n" : "")
+                + error + "\n\n可导出诊断信息并附加到 issue 里。";
         new AlertDialog.Builder(this)
                 .setTitle("分身创建失败")
                 .setMessage(message)
@@ -364,7 +411,7 @@ public final class MainActivity extends Activity {
                         exportDiagnostics();
                     }
                 })
-                .setNegativeButton("Close", null)
+                .setNegativeButton("关闭", null)
                 .show();
     }
 
@@ -402,10 +449,10 @@ public final class MainActivity extends Activity {
         try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
             if (out == null) throw new IllegalStateException("no output stream");
             out.write(pendingReport.getBytes(StandardCharsets.UTF_8));
-            Toast.makeText(this, "Diagnostics saved. Attach the file to the issue.",
+            Toast.makeText(this, "诊断信息已保存，可附加到 issue 里。",
                     Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "Could not save diagnostics: " + e,
+            Toast.makeText(this, "诊断信息保存失败：" + e,
                     Toast.LENGTH_LONG).show();
         } finally {
             pendingReport = null;
@@ -415,7 +462,7 @@ public final class MainActivity extends Activity {
     private void pickShortcut() {
         final List<CloneApps.Group> groups = CloneApps.pinGroups(this);
         if (groups.isEmpty()) {
-            Toast.makeText(this, "No clone apps to pin", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "分身里没有可固定的应用", Toast.LENGTH_SHORT).show();
             return;
         }
         CharSequence[] labels = new CharSequence[groups.size()];
@@ -426,7 +473,7 @@ public final class MainActivity extends Activity {
                     : group.app.label + "  \u00b7  " + group.targets.size() + " profiles";
         }
         new AlertDialog.Builder(this)
-                .setTitle("Pin a clone app")
+                .setTitle("固定分身应用")
                 .setItems(labels, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         CloneApps.Group group = groups.get(which);
@@ -460,7 +507,7 @@ public final class MainActivity extends Activity {
         final String expected = "DELETE";
         LinearLayout form = Ui.column(this);
         form.setPadding(Ui.dp(this, 24), Ui.dp(this, 8), Ui.dp(this, 24), 0);
-        form.addView(Ui.text(this, "Removes all " + clones.size() + " profiles and their "
+        form.addView(Ui.text(this, "将删除全部 " + clones.size() + " 个分身及其"
                 + "app data. Your main user is not affected.", 14, R.color.muted, false));
         form.addView(Ui.text(this, "Type " + expected + " to confirm", 12, R.color.muted, true),
                 Ui.margins(this, 0, 18, 0, 4));
@@ -471,10 +518,10 @@ public final class MainActivity extends Activity {
         form.addView(confirm);
 
         final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Delete all profiles?")
+                .setTitle("删除全部分身？")
                 .setView(form)
                 .setNegativeButton("取消", null)
-                .setPositiveButton("Delete all", null)
+                .setPositiveButton("全部删除", null)
                 .create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override public void onShow(DialogInterface unused) {

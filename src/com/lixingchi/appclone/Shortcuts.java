@@ -21,12 +21,12 @@ final class Shortcuts {
     static void pin(Context context, CloneApps.Target target) {
         ShortcutManager manager = (ShortcutManager) context.getSystemService(Context.SHORTCUT_SERVICE);
         if (manager == null || !manager.isRequestPinShortcutSupported()) {
-            Toast.makeText(context, "This launcher cannot pin shortcuts", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "当前桌面不支持固定快捷方式", Toast.LENGTH_SHORT).show();
             return;
         }
         Bitmap icon = CloneApps.icon(context, target.app.pkg, target.userId);
         if (icon == null) {
-            Toast.makeText(context, "That app is no longer in the clone", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "该应用已不在分身中", Toast.LENGTH_SHORT).show();
             return;
         }
         String label = label(context, target);

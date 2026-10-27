@@ -34,20 +34,20 @@ final class BootPolicy {
     }
 
     String status() {
-        return prefs.getString("status", "No reboot action has run.");
+        return prefs.getString("status", "尚未执行过重启操作。");
     }
 
     void save(String mode) {
-        if (!Arrays.asList(VALUES).contains(mode)) throw new IllegalArgumentException("Unknown reboot policy");
+        if (!Arrays.asList(VALUES).contains(mode)) throw new IllegalArgumentException("未知的重启策略");
         synchronized (BootPolicy.class) {
             String previous = mode();
             long run = prefs.getLong("run", 0);
             if (!prefs.edit().putString("mode", mode).putLong("run", run + 1)
-                    .putString("status", "Saved. Applies after the next reboot and unlock.").commit()) {
+                    .putString("status", "已保存，下次重启解锁后生效。").commit()) {
                 // Failed commits still update the in-memory preferences; restore the prior choice.
                 prefs.edit().putString("mode", previous).putLong("run", run)
-                        .putString("status", "Could not save reboot setting. Select it again to retry.").commit();
-                throw new IllegalStateException("Could not save reboot setting.");
+                        .putString("status", "重启设置保存失败，请重新选择。").commit();
+                throw new IllegalStateException("无法保存重启设置。");
             }
         }
     }
@@ -58,7 +58,7 @@ final class BootPolicy {
             long run = prefs.getLong("run", 0) + 1;
             store(prefs.edit().putLong("run", run).remove("pending").putBoolean("finished", false)
                     .putInt("total", 0).putInt("failed", 0).putString("error", "")
-                    .putString("status", "Reboot action queued; waiting for Android to run it."));
+                    .putString("status", "重启操作已入队，等待系统执行。"));
             return run;
         }
     }
@@ -73,7 +73,7 @@ final class BootPolicy {
     void fail(long run, String mode, String message) {
         synchronized (BootPolicy.class) {
             if (current(run, mode)) store(prefs.edit().putBoolean("finished", true)
-                    .putString("status", "Reboot action failed: " + message));
+                    .putString("status", "重启操作失败：" + message));
         }
     }
 
@@ -83,11 +83,11 @@ final class BootPolicy {
         if (pending == null) {
             Shell.Result users = shell.apply("cmd user list -v");
             if (!users.ok()) {
-                fail(run, mode, users.trim().isEmpty() ? "Root access unavailable." : users.trim());
+                fail(run, mode, users.trim().isEmpty() ? "无法获取 Root 权限。" : users.trim());
                 return;
             }
             if (!Pattern.compile("(?m)^\\d+ users:\\s*$").matcher(users.out).find()) {
-                fail(run, mode, "Could not read the profile list.\n" + users.trim());
+                fail(run, mode, "无法读取分身列表。\n" + users.trim());
                 return;
             }
             pending = new HashSet<>();
@@ -110,7 +110,7 @@ final class BootPolicy {
                 pending.remove(id);
                 int failed = prefs.getInt("failed", 0) + (result.ok() ? 0 : 1);
                 String error = result.ok() ? prefs.getString("error", "")
-                        : "User " + id + ": " + (result.trim().isEmpty() ? "Root command failed." : result.trim());
+                        : "用户 " + id + "：" + (result.trim().isEmpty() ? "Root 命令执行失败。" : result.trim());
                 store(prefs.edit().putStringSet("pending", pending).putInt("failed", failed)
                         .putString("error", error).putString("status", summary(mode, pending.size(), failed, error)));
             }
@@ -125,13 +125,13 @@ final class BootPolicy {
 
     private String summary(String mode, int remaining, int failed, String error) {
         int total = prefs.getInt("total", 0);
-        return (START.equals(mode) ? "Start all" : "Stop all") + ": "
-                + (total - remaining - failed) + " succeeded, " + failed + " failed, "
-                + remaining + " pending."
-                + (error.isEmpty() ? "" : "\nLast failure: " + error);
+        return (START.equals(mode) ? "启动全部" : "停止全部") + "："
+                + "成功 " + (total - remaining - failed) + "，失败 " + failed
+                + "，待处理 " + remaining + "。"
+                + (error.isEmpty() ? "" : "\n最近一次失败：" + error);
     }
 
     private static void store(SharedPreferences.Editor editor) {
-        if (!editor.commit()) throw new IllegalStateException("Could not save reboot settings/progress.");
+        if (!editor.commit()) throw new IllegalStateException("无法保存重启设置或进度。");
     }
 }

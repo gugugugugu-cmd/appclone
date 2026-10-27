@@ -145,7 +145,7 @@ public final class SettingsActivity extends Activity {
         root.addView(Ui.divider(this, 0, 24));
         root.addView(Ui.label(this, "关于"), Ui.margins(this, 0, 18, 0, 6));
         root.addView(Ui.text(this, "App Clone " + versionName(), 15, R.color.ink, false));
-        TextView source = Ui.text(this, "Source code \u00b7 github.com/gugugugugu-cmd/appclone",
+        TextView source = Ui.text(this, "源码 · github.com/gugugugugu-cmd/appclone",
                 13, R.color.accent, false);
         source.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
         source.setBackground(Ui.selectable(this));
@@ -232,6 +232,6 @@ public final class SettingsActivity extends Activity {
 
     private void updatePreview() {
         preview.setText("Preview: "
-                + Labels.format(format.getText().toString(), 12, "Chrome", "Clone 12"));
+                + Labels.format(format.getText().toString(), 12, "Chrome", "分身 12"));
     }
 }

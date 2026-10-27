@@ -72,7 +72,7 @@ final class Apps {
 
     static Shell.Result launch(int userId, App app, Function<String, Shell.Result> run) {
         if (app.pkg == null || app.pkg.isEmpty() || app.activity == null || app.activity.isEmpty()) {
-            return new Shell.Result(-1, "Invalid app shortcut.");
+            return new Shell.Result(-1, "快捷方式无效。");
         }
         Shell.Result started = Clones.setRunning(userId, true, run);
         if (!started.ok()) return started;

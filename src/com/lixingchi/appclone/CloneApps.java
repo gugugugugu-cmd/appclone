@@ -177,7 +177,7 @@ final class CloneApps {
 
     private static String label(Object info, UserHandle user) {
         String serial = string(info, "getSerialNumber");
-        return serial == null ? "Clone " + user.hashCode() : "Clone " + serial;
+        return serial == null ? "分身 " + user.hashCode() : "分身 " + serial;
     }
 
     private static String string(Object target, String method) {

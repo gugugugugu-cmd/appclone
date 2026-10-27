@@ -53,7 +53,7 @@ public final class CloneDetailActivity extends Activity {
         head.addView(titles, Ui.weightWithStart(this, 1, 14));
         root.addView(head);
         root.addView(Ui.label(this, "应用（勾选的项目才会出现在该分身的桌面）"),
-                Ui.margins(this, 0, 22, 0, 6));
+                Ui.margins(this, 4, 22, 0, 8));
 
         ListView list = new ListView(this);
         list.setDivider(new android.graphics.drawable.InsetDrawable(

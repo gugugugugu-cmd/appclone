@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="paper">#FFF4F2ED</color>
+    <!-- MIUI X: light neutrals, HyperOS blue, large soft cards. -->
+    <color name="paper">#FFF2F3F5</color>
     <color name="surface">#FFFFFFFF</color>
-    <color name="ink">#FF191813</color>
-    <color name="muted">#FF6E6A61</color>
-    <color name="line">#FFE3DFD6</color>
-    <color name="accent">#FF146C56</color>
-    <color name="accent_tint">#1A146C56</color>
+    <color name="ink">#FF0F1216</color>
+    <color name="muted">#FF8A8F98</color>
+    <color name="line">#FFEDEEF1</color>
+    <color name="accent">#FF3482FF</color>
+    <color name="accent_tint">#1F3482FF</color>
     <color name="on_accent">#FFFFFFFF</color>
-    <color name="danger">#FFA33A2A</color>
-    <color name="ripple">#22000000</color>
+    <color name="danger">#FFE24C4B</color>
+    <color name="ripple">#14000000</color>
+    <color name="field">#FFF5F6F8</color>
 </resources>

@@ -22,7 +22,7 @@ public final class LaunchActivity extends Activity {
         String label = getIntent().getStringExtra(EXTRA_LABEL);
         final Apps.App app = new Apps.App(label == null ? "" : label, pkg, activity);
         progress = new ProgressDialog(this);
-        progress.setMessage("Opening clone app\u2026");
+        progress.setMessage("正在打开分身应用…");
         progress.setCancelable(false);
         progress.show();
         new Thread(() -> {
@@ -34,7 +34,7 @@ public final class LaunchActivity extends Activity {
                     finish();
                 } else {
                     new AlertDialog.Builder(this)
-                            .setTitle("Could not open clone app")
+                            .setTitle("无法打开分身应用")
                             .setMessage(result.trim().isEmpty() ? "Root 命令执行失败。" : result.trim())
                             .setPositiveButton("关闭", null)
                             .setOnDismissListener(dialog -> finish())
