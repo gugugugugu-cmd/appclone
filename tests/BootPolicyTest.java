@@ -33,7 +33,7 @@ public final class BootPolicyTest {
         } catch (IllegalArgumentException expected) { }
 
         policy.save(BootPolicy.START);
-        check(policy.status().contains("next reboot"), "saving does not run immediately");
+        check(policy.status().contains("下次重启"), "saving does not run immediately");
         long start = policy.begin();
         Script starting = new Script().then("cmd user list -v", 0, USERS)
                 .then("cmd user list -v", 0, USERS)
@@ -44,7 +44,7 @@ public final class BootPolicyTest {
                 .then("am get-started-user-state 12", 0, "RUNNING_UNLOCKED");
         policy.apply(start, BootPolicy.START, () -> true, starting);
         starting.done();
-        check(policy.status().contains("2 succeeded, 0 failed, 0 pending"), "start-all summary");
+        check(policy.status().contains("成功 2，失败 0，待处理 0"), "start-all summary");
         policy.apply(start, BootPolicy.START, () -> true, none);
         none.done();
 
@@ -62,13 +62,13 @@ public final class BootPolicyTest {
             return result;
         });
         first.done();
-        check(policy.status().contains("1 succeeded, 0 failed, 1 pending"), "checkpoint survives scheduler stop");
+        check(policy.status().contains("成功 1，失败 0，待处理 1"), "checkpoint survives scheduler stop");
         Script rest = new Script().then("cmd user list -v", 0, USERS)
                 .then("am stop-user -w -f 12", 0, "")
                 .then("am is-user-stopped 12", 0, "true");
         new BootPolicy(memory.prefs).apply(stop, BootPolicy.STOP, () -> true, rest);
         rest.done();
-        check(policy.status().contains("2 succeeded, 0 failed, 0 pending"), "resume skips completed clone");
+        check(policy.status().contains("成功 2，失败 0，待处理 0"), "resume skips completed clone");
 
         long partial = policy.begin();
         Script failures = new Script().then("cmd user list -v", 0, USERS)
@@ -78,8 +78,8 @@ public final class BootPolicyTest {
                 .then("am is-user-stopped 12", 0, "true");
         policy.apply(partial, BootPolicy.STOP, () -> true, failures);
         failures.done();
-        check(policy.status().contains("1 succeeded, 1 failed, 0 pending")
-                && policy.status().contains("no longer exists: 11"), "partial failures reported, later clones still processed");
+        check(policy.status().contains("成功 1，失败 1，待处理 0")
+                && policy.status().contains("分身已不存在：11"), "partial failures reported, later clones still processed");
         policy.apply(partial, BootPolicy.STOP, () -> true, none);
         none.done();
 
@@ -87,11 +87,11 @@ public final class BootPolicyTest {
         Script noRoot = new Script().then("cmd user list -v", 1, "Root denied");
         policy.apply(denied, BootPolicy.STOP, () -> true, noRoot);
         noRoot.done();
-        check(policy.status().contains("failed: Root denied"), "root failure saved");
+        check(policy.status().contains("失败：Root denied"), "root failure saved");
         policy.apply(denied, BootPolicy.STOP, () -> true, none);
         none.done();
         policy.fail(policy.begin(), BootPolicy.STOP, "Cannot schedule");
-        check(policy.status().contains("Cannot schedule"), "scheduling failure saved");
+        check(policy.status().contains("重启操作失败：Cannot schedule"), "scheduling failure saved");
         policy.save(BootPolicy.SYSTEM);
         policy.apply(denied, BootPolicy.STOP, () -> true, none);
         policy.fail(denied, BootPolicy.STOP, "stale failure");
@@ -103,12 +103,12 @@ public final class BootPolicyTest {
         Script badList = new Script().then("cmd user list -v", 0, "Error: list unavailable");
         policy.apply(malformed, BootPolicy.STOP, () -> true, badList);
         badList.done();
-        check(policy.status().contains("Could not read the profile list"), "unreadable list is not an empty success");
+        check(policy.status().contains("无法读取分身列表"), "unreadable list is not an empty success");
         long empty = policy.begin();
         Script noClones = new Script().then("cmd user list -v", 0, "0 users:\n");
         policy.apply(empty, BootPolicy.STOP, () -> true, noClones);
         noClones.done();
-        check(policy.status().contains("0 succeeded, 0 failed, 0 pending"), "empty batch finishes");
+        check(policy.status().contains("成功 0，失败 0，待处理 0"), "empty batch finishes");
         long cancelled = policy.begin();
         policy.apply(cancelled, BootPolicy.STOP, () -> false, none);
         none.done();
@@ -122,14 +122,14 @@ public final class BootPolicyTest {
             return result;
         });
         changedDuringList.done();
-        check(policy.status().contains("Saved"), "policy change during discovery prevents mutations");
+        check(policy.status().contains("已保存"), "policy change during discovery prevents mutations");
 
         memory.failCommit = true;
         try {
             policy.save(BootPolicy.STOP);
             throw new AssertionError("storage failure swallowed");
         } catch (IllegalStateException expected) { }
-        check(BootPolicy.SYSTEM.equals(policy.mode()) && policy.status().contains("Could not save"),
+        check(BootPolicy.SYSTEM.equals(policy.mode()) && policy.status().contains("保存失败"),
                 "failed save restores prior in-memory choice and reports failure");
         System.out.println("ok BootPolicyTest");
     }
