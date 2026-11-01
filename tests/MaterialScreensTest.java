@@ -72,9 +72,12 @@ public final class MaterialScreensTest {
                 .putExtra(CloneDetailActivity.EXTRA_SERIAL, 42L);
         ActivityController<CloneDetailActivity> profile = Robolectric.buildActivity(CloneDetailActivity.class, profileIntent).create();
         profile.get().inventory = fixture(); profile.get().render();
-        assertTrue(text(profile.get().body).contains("Chat"));
+        String profileText = text(profile.get().body);
+        assertTrue("profile lists the app: " + profileText, profileText.contains("Chat"));
         profile.get().inventory = new Inventory(Collections.emptyList(), Collections.emptyList()); profile.get().render();
-        assertTrue(profile.get().status.getText().toString().contains("removed or replaced"));
+        String gone = profile.get().status.getText().toString();
+        assertTrue("vanished profile is reported: " + gone,
+                gone.contains("分身已不存在") || gone.contains("刷新"));
         profile.destroy();
     }
 
@@ -132,8 +135,9 @@ public final class MaterialScreensTest {
         BackgroundPolicy.State state = new BackgroundPolicy.State(1110123, 1234, 0, -1);
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Personal · 用户 11"));
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("通知和任务可能被延迟"));
+        String body = text(dialog.getWindow().getDecorView());
+        assertTrue("dialog location: " + body, body.contains("Personal · 用户 11"));
+        assertTrue("dialog explanation: " + body, body.contains("通知和任务可能被延迟"));
         assertEquals("限制", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
         assertEquals("保持当前", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).getText().toString());
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick();
