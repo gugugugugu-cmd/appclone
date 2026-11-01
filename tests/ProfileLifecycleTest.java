@@ -66,8 +66,9 @@ public final class ProfileLifecycleTest {
         // that is the state in which the next start cannot unlock at all.
         Script lockedStop = users().then("am stop-user -f 12", 0, "")
                 .repeat("am is-user-stopped 12", 0, "RUNNING_LOCKED", stopPolls());
-        Shell.Result locked = Clones.setRunning(12, false, lockedStop, nap);
-        check(!locked.ok() && locked.out.contains("存储仍未锁定完成"), "half-stopped profile is reported");
+        Shell.Result halfStopped = Clones.setRunning(12, false, lockedStop, nap);
+        check(!halfStopped.ok() && halfStopped.out.contains("存储仍未锁定完成"),
+                "half-stopped profile is reported");
         lockedStop.done();
 
         for (String output : new String[] {"Success: user started", "Error: could not start user"}) {
