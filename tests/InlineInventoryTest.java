@@ -45,7 +45,7 @@ public final class InlineInventoryTest {
         activity.inventory = fixture(20); activity.render();
         assertEquals(22, activity.body.getAdapter().getItemCount());
         String contents = text(activity.body);
-        for (int i = 0; i < 20; i++) assertTrue(contents.contains("Account " + i + "\nUser " + (11 + i)));
+        for (int i = 0; i < 20; i++) assertTrue(contents.contains("Account " + i + "\n用户 " + (11 + i)));
         assertTrue(contents.contains("已停用 · 分身运行中"));
         assertTrue(contents.contains("分身已停止"));
         assertNull(shadowOf(activity).getNextStartedActivity());

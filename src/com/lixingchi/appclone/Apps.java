@@ -68,7 +68,8 @@ final class Apps {
                 if (present != (action == Action.INSTALL)) return new Shell.Result(-1, "应用安装状态没有变化。\n" + result.out);
             } else if (action != Action.FORCE_STOP) {
                 String state = action == Action.DISABLE ? "disabled-user" : action == Action.ENABLE ? "enabled" : "default";
-                if (!result.trim().equals("包名 " + pkg + " new state: " + state)) {
+                // Compared against pm's own output, which is never localised.
+                if (!result.trim().equals("Package " + pkg + " new state: " + state)) {
                     return new Shell.Result(-1, "无法确认应用状态。\n" + result.out);
                 }
                 if (action != Action.DEFAULT && packages(id, "-d ", run).contains(pkg) != (action == Action.DISABLE)) {

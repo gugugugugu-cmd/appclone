@@ -101,7 +101,7 @@ public final class InventoryRefreshTest {
         assertSame(row, manager.findViewByPosition(12));
         assertEquals(-20, row.getTop());
         assertEquals(1, reads.size());
-        assertTrue(activity.status.getText().toString().contains("previous list"));
+        assertTrue(activity.status.getText().toString().contains("之前的列表"));
         finishRead();
         layout(list, 400, 600);
         assertEquals(12, manager.findFirstVisibleItemPosition());

@@ -42,7 +42,7 @@ public final class AppDetailActivity extends InventoryActivity {
             rows.add(InventoryList.Item.empty("没有可显示的分身", "返回「应用」去添加分身。"));
         } else {
             toolbar.setTitle(entry.app.label);
-            status.setText(entry.profiles.size() + " clones · " + pkg);
+            status.setText(entry.profiles.size() + " 个分身 · " + pkg);
             for (Inventory.Profile profile : entry.profiles) rows.add(InventoryList.Item.instance(entry, profile, false));
         }
         body.show(rows);

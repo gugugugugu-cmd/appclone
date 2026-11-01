@@ -72,7 +72,7 @@ public final class CloneDetailActivity extends InventoryActivity {
             rows.add(InventoryList.Item.instance(entry, profile, true));
         }
         status.setText("用户 " + id + " · " + (profile.clone.running ? "运行中" : "已停止")
-                + " · " + count + " apps" + (Settings.systemApps(this) ? "" : " · System apps hidden"));
+                + " · " + count + " 个应用" + (Settings.systemApps(this) ? "" : " · 已隐藏系统应用"));
         if (count == 0) rows.add(InventoryList.Item.empty("没有可显示的应用", "从菜单里添加应用，或显示系统应用。"));
         body.show(rows);
     }

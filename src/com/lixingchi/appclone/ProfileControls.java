@@ -41,8 +41,8 @@ final class ProfileControls {
     static void rename(InventoryActivity activity, Inventory.Profile profile) {
         LinearLayout form = Ui.column(activity);
         form.setPadding(Ui.dp(activity, 24), 0, Ui.dp(activity, 24), Ui.dp(activity, 8));
-        form.addView(Ui.text(activity, "用户 " + profile.clone.id + " · Serial " + profile.serial
-                + "\nChanges the profile name for all its apps. Data and running state stay unchanged. "
+        form.addView(Ui.text(activity, "用户 " + profile.clone.id + " · 序号 " + profile.serial
+                + "\n这会同时改变该分身里所有应用显示的分身名，数据与运行状态不受影响。"
                 + "已有快捷方式的名称不变，想要新名称请重新固定。", 14, R.color.muted, false));
         EditText name = Ui.input(activity, form, "分身名称");
         name.setText(profile.clone.name);
@@ -64,7 +64,7 @@ final class ProfileControls {
 
     static void remove(InventoryActivity activity, Inventory.Profile profile, Runnable success) {
         new MaterialAlertDialogBuilder(activity).setTitle("删除分身？")
-                .setMessage(Inventory.location(profile) + "\n\nDeletes ALL app data in this profile, including system apps hidden by the filter. Other profiles and the main user are untouched.")
+                .setMessage(Inventory.location(profile) + "\n\n将删除该分身里的全部应用数据，包括被筛选隐藏的系统应用。其他分身和主用户不受影响。")
                 .setNegativeButton("取消", null).setPositiveButton("删除", (dialog, which) ->
                         activity.work("正在删除分身…", () -> Clones.remove(profile.clone.id, profile.serial), success)).show();
     }

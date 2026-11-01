@@ -41,8 +41,8 @@ public final class MaterialScreensTest {
         activity.render();
         assertTrue(text(activity.body).contains("还没有分身应用"));
         activity.inventory = fixture(); activity.render();
-        assertTrue(text(activity.body).contains("Chat\ncom.chat\n1 clone"));
-        assertTrue(text(activity.body).contains("Personal\nUser 11"));
+        assertTrue(text(activity.body).contains("Chat\ncom.chat\n1 个分身"));
+        assertTrue(text(activity.body).contains("个人\n用户 11"));
         assertTrue(text(activity.body).contains("已停用 · 分身已停止"));
         assertFalse(text(activity.body).contains("管理"));
         assertFalse(text(activity.body).contains("System fixture"));
@@ -62,7 +62,7 @@ public final class MaterialScreensTest {
         ActivityController<AppDetailActivity> app = Robolectric.buildActivity(AppDetailActivity.class, appIntent).create();
         app.get().inventory = fixture(); app.get().render();
         assertTrue(text(app.get().body).contains("已停用 · 分身已停止"));
-        assertTrue(text(app.get().body).contains("Personal\nUser 11"));
+        assertTrue(text(app.get().body).contains("个人\n用户 11"));
         assertFalse(findText(row(app.get().body, 1), "Open").isEnabled());
         app.destroy();
         Intent profileIntent = new Intent().putExtra(CloneDetailActivity.EXTRA_ID, 11)

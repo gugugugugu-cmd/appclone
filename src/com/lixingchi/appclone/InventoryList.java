@@ -39,7 +39,7 @@ final class InventoryList extends RecyclerView {
         }
         static Item heading(Inventory.Entry entry) {
             return new Item(HEADING, "app:" + entry.app.pkg, entry.app.label,
-                    entry.profiles.size() + (entry.profiles.size() == 1 ? " clone" : " clones"), entry, null);
+                    entry.profiles.size() + " 个分身", entry, null);
         }
         static Item instance(Inventory.Entry entry, Inventory.Profile profile, boolean appHeading) {
             return new Item(appHeading ? APP_INSTANCE : INSTANCE,
@@ -49,7 +49,7 @@ final class InventoryList extends RecyclerView {
         static Item profile(Inventory.Profile profile, int count) {
             return new Item(PROFILE, "profile:" + profile.clone.id + ":" + profile.serial, profile.clone.name,
                     "用户 " + profile.clone.id + " · " + (profile.clone.running ? "运行中" : "已停止")
-                            + " · " + count + " apps", null, profile);
+                            + " · " + count + " 个应用", null, profile);
         }
         static Item empty(String title, String detail) {
             return new Item(EMPTY, "empty", title, detail, null, null);

@@ -241,7 +241,8 @@ final class Clones {
         Shell.Result checked = verify(id, serial, run);
         if (!checked.ok()) return checked;
         Shell.Result result = run.apply("pm remove-user --wait " + id);
-        if (!result.ok() || !result.out.contains("成功")) return new Shell.Result(-1, result.out);
+        // pm prints English; this is its own output, not UI text.
+        if (!result.ok() || !result.out.contains("Success")) return new Shell.Result(-1, result.out);
         try {
             for (Clone clone : list(run)) if (clone.id == id) {
                 return new Shell.Result(-1, "分身仍然存在，请刷新后重试。");

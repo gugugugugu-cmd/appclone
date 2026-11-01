@@ -132,7 +132,7 @@ public final class MainActivity extends InventoryActivity {
                 rows.add(InventoryList.Item.profile(profile, count));
             }
             status.setText(inventory.profiles.size() + " profiles · " + running + " running"
-                    + (Settings.systemApps(this) ? "" : " · System apps hidden"));
+                    + (Settings.systemApps(this) ? "" : " · 已隐藏系统应用"));
         } else {
             for (Inventory.Entry entry : inventory.apps) {
                 if (entry.system && !Settings.systemApps(this)) continue;
@@ -146,7 +146,7 @@ public final class MainActivity extends InventoryActivity {
                 rows.add(InventoryList.Item.heading(entry));
                 for (Inventory.Profile profile : entry.profiles) rows.add(InventoryList.Item.instance(entry, profile, false));
             }
-            status.setText(shown + " cloned apps · " + (Settings.systemApps(this) ? "包含系统应用" : "已隐藏系统应用"));
+            status.setText(shown + " 个分身应用 · " + (Settings.systemApps(this) ? "包含系统应用" : "已隐藏系统应用"));
         }
         if (shown == 0) {
             rows.add(InventoryList.Item.empty(query.isEmpty() ? (profiles ? "还没有分身" : "还没有分身应用") : "没有匹配结果",
