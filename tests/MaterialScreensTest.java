@@ -42,7 +42,7 @@ public final class MaterialScreensTest {
         assertTrue(text(activity.body).contains("还没有分身应用"));
         activity.inventory = fixture(); activity.render();
         assertTrue(text(activity.body).contains("Chat\ncom.chat\n1 个分身"));
-        assertTrue(text(activity.body).contains("个人\n用户 11"));
+        assertTrue(text(activity.body).contains("Personal\n用户 11"));
         assertTrue(text(activity.body).contains("已停用 · 分身已停止"));
         assertFalse(text(activity.body).contains("管理"));
         assertFalse(text(activity.body).contains("System fixture"));
@@ -62,7 +62,7 @@ public final class MaterialScreensTest {
         ActivityController<AppDetailActivity> app = Robolectric.buildActivity(AppDetailActivity.class, appIntent).create();
         app.get().inventory = fixture(); app.get().render();
         assertTrue(text(app.get().body).contains("已停用 · 分身已停止"));
-        assertTrue(text(app.get().body).contains("个人\n用户 11"));
+        assertTrue(text(app.get().body).contains("Personal\n用户 11"));
         assertFalse(findText(row(app.get().body, 1), "打开").isEnabled());
         app.destroy();
         Intent profileIntent = new Intent().putExtra(CloneDetailActivity.EXTRA_ID, 11)
@@ -129,7 +129,7 @@ public final class MaterialScreensTest {
         BackgroundPolicy.State state = new BackgroundPolicy.State(1110123, 1234, 0, -1);
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("个人 · 用户 11"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("Personal · 用户 11"));
         assertTrue(text(dialog.getWindow().getDecorView()).contains("通知和任务可能被延迟"));
         assertEquals("限制", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
         assertEquals("保持当前", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).getText().toString());

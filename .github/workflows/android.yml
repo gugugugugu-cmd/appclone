@@ -46,6 +46,16 @@ jobs:
           python3 build.py --self-check
           python3 build.py --lint
           python3 build.py
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unit-test-report
+          path: |
+            ~/.cache/appclone/gradle-build/test-results/**/*.xml
+            dist/test-results/**/*.xml
+          if-no-files-found: warn
+          retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: development-apk-not-for-release
