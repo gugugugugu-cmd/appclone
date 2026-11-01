@@ -45,9 +45,10 @@ public final class InlineInventoryTest {
         activity.inventory = fixture(20); activity.render();
         assertEquals(22, activity.body.getAdapter().getItemCount());
         String contents = text(activity.body);
-        for (int i = 0; i < 20; i++) assertTrue(contents.contains("Account " + i + "\n用户 " + (11 + i)));
-        assertTrue(contents.contains("已停用 · 分身运行中"));
-        assertTrue(contents.contains("分身已停止"));
+        for (int i = 0; i < 20; i++) assertTrue("row " + i + ": " + contents,
+                contents.contains("Account " + i + "\n用户 " + (11 + i)));
+        assertTrue("running: " + contents, contents.contains("已停用 · 分身运行中"));
+        assertTrue("stopped: " + contents, contents.contains("分身已停止"));
         assertNull(shadowOf(activity).getNextStartedActivity());
         find(activity.body.header, EditText.class).setText("Account 19");
         assertEquals(22, activity.body.getAdapter().getItemCount());
@@ -86,7 +87,8 @@ public final class InlineInventoryTest {
         menu.getMenu().performIdentifierAction(7, 0);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
         assertEquals("Account 1", find(dialog.getWindow().getDecorView(), EditText.class).getText().toString());
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("for all its apps"));
+        String renameBody = text(dialog.getWindow().getDecorView());
+        assertTrue("rename dialog explanation: " + renameBody, renameBody.contains("所有应用显示的分身名"));
         dialog.dismiss();
         controller.destroy();
     }

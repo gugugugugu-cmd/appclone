@@ -19,6 +19,8 @@ android {
     testOptions.unitTests.includeAndroidResources = true
     tasks.withType(Test).configureEach {
         // Show the assertion message (and thus the expected value) in CI logs.
+        ignoreFailures = false
+        afterSuite { desc, result -> if (result.failedTestCount) println("failed: ${desc.name}") }
         testLogging {
             events "failed"
             exceptionFormat "full"
