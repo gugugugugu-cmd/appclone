@@ -17,6 +17,14 @@ android {
     compileSdk 36
     buildToolsVersion '36.0.0'
     testOptions.unitTests.includeAndroidResources = true
+    tasks.withType(Test).configureEach {
+        // Show the assertion message (and thus the expected value) in CI logs.
+        testLogging {
+            events "failed"
+            exceptionFormat "full"
+            showStackTraces false
+        }
+    }
     defaultConfig {
         applicationId 'com.lixingchi.appclone'
         minSdk 33
