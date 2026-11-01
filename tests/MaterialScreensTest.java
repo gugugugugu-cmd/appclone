@@ -68,8 +68,9 @@ public final class MaterialScreensTest {
                 .getMenu().findItem(2).isChecked());
         TabLayout tabs = find(activity.getWindow().getDecorView(), TabLayout.class);
         tabs.getTabAt(1).select();
-        assertTrue(text(activity.body).contains("个人"));
-        assertTrue(text(activity.body).contains("Stopped"));
+        String profiles = text(activity.body);
+        assertTrue("profile tab: " + profiles, profiles.contains("Personal"));
+        assertTrue("profile state: " + profiles, profiles.contains("已停止"));
         controller.destroy();
     }
 

@@ -52,8 +52,8 @@ jobs:
         with:
           name: unit-test-report
           path: |
-            ~/.cache/appclone/gradle-build/test-results/**/*.xml
-            dist/test-results/**/*.xml
+            **/test-results/**/*.xml
+            /tmp/appclone-ui/**
           if-no-files-found: warn
           retention-days: 7
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

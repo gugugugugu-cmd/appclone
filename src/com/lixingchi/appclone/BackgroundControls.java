@@ -24,7 +24,7 @@ final class BackgroundControls {
         String pkg = entry.app.pkg;
         BackgroundPolicy.State saved = policy.previous(user, serial, pkg);
         String target = entry.app.label + "\n" + Inventory.location(profile);
-        String message = target + "\n\nCurrent: " + BackgroundPolicy.name(state.mode)
+        String message = target + "\n\n当前：" + BackgroundPolicy.name(state.mode)
                 + (state.uidMode == -1 ? "" : "\nUID 级覆盖：" + BackgroundPolicy.name(state.uidMode) + "（由别处管理）")
                 + (saved == null ? "\n没有保存过之前的设置。" : "\n之前：" + BackgroundPolicy.name(saved.mode))
                 + "\n\n「限制」会限制 Android 后台活动（RUN_ANY_IN_BACKGROUND），通知和任务可能被延迟。"
@@ -38,7 +38,7 @@ final class BackgroundControls {
             }, () -> Toast.makeText(activity, "已恢复之前的后台设置", Toast.LENGTH_LONG).show(), false));
             dialog.setNeutralButton("忘记已保存的设置", (d, which) -> new MaterialAlertDialogBuilder(activity)
                     .setTitle("忘记之前的设置？")
-                    .setMessage(target + "\n\nAndroid's current setting stays unchanged. This removes only App Clone's restore record; Restore will no longer be available.")
+                    .setMessage(target + "\n\nAndroid 当前设置保持不变。这里只清除 App Clone 的恢复记录，「恢复之前设置」将不再可用。")
                     .setNegativeButton("取消", null).setPositiveButton("忘记", (confirm, button) -> activity.work("正在清除已保存设置…", () -> {
                         policy.forget(user, serial, pkg, saved);
                         return new Shell.Result(0, "");
