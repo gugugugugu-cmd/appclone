@@ -130,7 +130,7 @@ public final class BootPolicyTest {
             policy.save(BootPolicy.STOP);
             throw new AssertionError("storage failure swallowed");
         } catch (IllegalStateException expected) { }
-        check(BootPolicy.SYSTEM.equals(policy.mode()) && policy.status().contains("无法保存"),
+        check(BootPolicy.SYSTEM.equals(policy.mode()) && policy.status().contains("保存失败"),
                 "failed save restores prior in-memory choice and reports failure");
         System.out.println("ok BootPolicyTest");
     }

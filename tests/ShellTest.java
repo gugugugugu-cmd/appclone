@@ -63,7 +63,7 @@ public final class ShellTest {
         check(!fallbackTimeout.ok() && fallbackTimeout.out.contains("超时"), "fallback retains the timeout");
         Thread.currentThread().interrupt();
         Shell.Result interrupted = Shell.run(child("sleep"), child("output"), 10, TimeUnit.SECONDS);
-        check(!interrupted.ok() && interrupted.out.contains("interrupted") && Thread.currentThread().isInterrupted(),
+        check(!interrupted.ok() && interrupted.out.contains("被中断") && Thread.currentThread().isInterrupted(),
                 "interruption does not replay the command and preserves interrupt status");
         Thread.interrupted();
         System.out.println("ok ShellTest");

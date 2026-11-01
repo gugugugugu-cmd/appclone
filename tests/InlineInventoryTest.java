@@ -82,7 +82,7 @@ public final class InlineInventoryTest {
         PopupMenu menu = AppControls.menu(activity, activity.inventory.apps.get(0), activity.inventory.profiles.get(1), more);
         assertEquals(8, menu.getMenu().size());
         assertEquals("后台活动", menu.getMenu().findItem(6).getTitle());
-        assertEquals("Rename profile", menu.getMenu().findItem(7).getTitle());
+        assertEquals("重命名分身", menu.getMenu().findItem(7).getTitle());
         menu.getMenu().performIdentifierAction(7, 0);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
         assertEquals("Account 1", find(dialog.getWindow().getDecorView(), EditText.class).getText().toString());
