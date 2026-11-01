@@ -100,7 +100,7 @@ final class Inventory {
     }
 
     static String location(Profile profile) {
-        return profile.clone.name + " · User " + profile.clone.id;
+        return profile.clone.name + " · 用户 " + profile.clone.id;
     }
 
     static String state(Profile profile, String pkg) {

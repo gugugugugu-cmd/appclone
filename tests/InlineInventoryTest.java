@@ -69,7 +69,7 @@ public final class InlineInventoryTest {
         adapter.bindViewHolder(holder, 3);
         assertTrue(findText(holder.itemView, "打开").isEnabled());
         ImageButton more = find(holder.itemView, ImageButton.class);
-        assertEquals("Actions for Chat in Account 1 · User 12", more.getContentDescription());
+        assertEquals("操作：Chat in Account 1 · 用户 12", more.getContentDescription());
         layout(holder.itemView, Ui.dp(activity, 320), Ui.dp(activity, 200));
         assertEquals(Ui.dp(activity, 48), more.getWidth());
         assertEquals(Ui.dp(activity, 48), more.getHeight());
