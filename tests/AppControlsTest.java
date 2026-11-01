@@ -27,8 +27,8 @@ public final class AppControlsTest {
                 new Inventory.Entry(new Apps.App(pkg, pkg, ""), false));
         assertEquals(2, entries.size());
         assertEquals(2, entries.get(0).profiles.size());
-        assertTrue(Inventory.state(p2, PKG).contains("Disabled"));
-        assertTrue(Inventory.state(p2, PKG).contains("stopped"));
+        assertTrue(Inventory.state(p2, PKG).contains("已停用"));
+        assertTrue(Inventory.state(p2, PKG).contains("已停止"));
         assertTrue(Inventory.group(Collections.emptyList(), pkg -> { throw new AssertionError(); }).isEmpty());
     }
 

@@ -39,12 +39,12 @@ public final class MaterialScreensTest {
         Settings.systemApps(activity, false);
         activity.inventory = new Inventory(Collections.emptyList(), Collections.emptyList());
         activity.render();
-        assertTrue(text(activity.body).contains("No cloned apps yet"));
+        assertTrue(text(activity.body).contains("还没有分身应用"));
         activity.inventory = fixture(); activity.render();
         assertTrue(text(activity.body).contains("Chat\ncom.chat\n1 clone"));
         assertTrue(text(activity.body).contains("Personal\nUser 11"));
-        assertTrue(text(activity.body).contains("Disabled · Profile stopped"));
-        assertFalse(text(activity.body).contains("Manage"));
+        assertTrue(text(activity.body).contains("已停用 · 分身已停止"));
+        assertFalse(text(activity.body).contains("管理"));
         assertFalse(text(activity.body).contains("System fixture"));
         Settings.systemApps(activity, true); activity.render();
         assertTrue(text(activity.body).contains("System fixture"));
@@ -52,7 +52,7 @@ public final class MaterialScreensTest {
                 .getMenu().findItem(2).isChecked());
         TabLayout tabs = find(activity.getWindow().getDecorView(), TabLayout.class);
         tabs.getTabAt(1).select();
-        assertTrue(text(activity.body).contains("Personal"));
+        assertTrue(text(activity.body).contains("个人"));
         assertTrue(text(activity.body).contains("Stopped"));
         controller.destroy();
     }
@@ -61,7 +61,7 @@ public final class MaterialScreensTest {
         Intent appIntent = new Intent().putExtra(AppDetailActivity.EXTRA_PKG, "com.chat");
         ActivityController<AppDetailActivity> app = Robolectric.buildActivity(AppDetailActivity.class, appIntent).create();
         app.get().inventory = fixture(); app.get().render();
-        assertTrue(text(app.get().body).contains("Disabled · Profile stopped"));
+        assertTrue(text(app.get().body).contains("已停用 · 分身已停止"));
         assertTrue(text(app.get().body).contains("Personal\nUser 11"));
         assertFalse(findText(row(app.get().body, 1), "Open").isEnabled());
         app.destroy();
@@ -105,7 +105,7 @@ public final class MaterialScreensTest {
         AddClone.create(activity, null);
         android.app.Dialog dialog = org.robolectric.shadows.ShadowDialog.getLatestDialog();
         assertTrue(dialog.isShowing());
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Clone Profile"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("分身"));
         assertFalse(find(dialog.getWindow().getDecorView(), com.google.android.material.checkbox.MaterialCheckBox.class).isChecked());
         dialog.dismiss();
         AlertDialog progress = Ui.progress(activity, "Testing…");
@@ -113,8 +113,8 @@ public final class MaterialScreensTest {
         progress.dismiss();
         AppControls.confirm(activity, activity.inventory.app("com.chat"), activity.inventory.profile(11), Apps.Action.DISABLE);
         dialog = org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("User 11"));
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Data is kept"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("用户 11"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("数据保留"));
         dialog.dismiss();
         controller.destroy();
     }
@@ -130,7 +130,7 @@ public final class MaterialScreensTest {
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
         assertTrue(text(dialog.getWindow().getDecorView()).contains("Personal · User 11"));
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Notifications and jobs may be delayed"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("通知和任务可能被延迟"));
         assertEquals("Restrict", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
         assertEquals("Keep current", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).getText().toString());
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick();
@@ -143,7 +143,7 @@ public final class MaterialScreensTest {
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick();
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Android's current setting stays unchanged"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("Android 当前设置保持不变"));
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick();
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         assertEquals(state, policy.previous(11, 42, "com.chat"));

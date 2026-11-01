@@ -119,12 +119,12 @@ public final class InventoryRefreshTest {
         fail = true;
         main.get().refresh(); finishRead();
         assertSame(row, main.get().body.getChildAt(0));
-        assertTrue(main.get().status.getText().toString().contains("Refresh failed; showing previous list"));
+        assertTrue(main.get().status.getText().toString().contains("刷新失败，显示之前的列表"));
         main.pause().resume();
         assertTrue(reads.isEmpty());
         Settings.systemApps(main.get(), true);
         main.pause().resume();
-        assertTrue(main.get().status.getText().toString().contains("Refresh failed"));
+        assertTrue(main.get().status.getText().toString().contains("刷新失败"));
         assertEquals(61, main.get().body.getAdapter().getItemCount());
         assertEquals(View.VISIBLE, main.get().body.retry.getVisibility());
         main.get().status.performClick();
@@ -133,7 +133,7 @@ public final class InventoryRefreshTest {
         details.dismiss();
         fail = false;
         main.get().body.retry.performClick(); finishRead();
-        assertFalse(main.get().status.getText().toString().contains("Refresh failed"));
+        assertFalse(main.get().status.getText().toString().contains("刷新失败"));
         assertEquals(View.GONE, main.get().body.retry.getVisibility());
         assertEquals(61, main.get().body.getAdapter().getItemCount());
         assertEquals(3, scans);

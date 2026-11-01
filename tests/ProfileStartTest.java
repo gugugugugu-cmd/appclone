@@ -63,11 +63,11 @@ public final class ProfileStartTest {
     @Test public void missingCredentialAndSlowUnlockAreNotSuccess() {
         Device device = new Device(); device.cached = false;
         Exception error = assertThrows(IllegalStateException.class, () -> ProfileStart.start(11, device, 0));
-        assertTrue(error.getMessage().contains("PIN, pattern or password"));
+        assertTrue(error.getMessage().contains("PIN、图案或密码"));
         assertEquals(1, device.unlocks);
         Device slow = new Device(); slow.unlockReady = false;
         error = assertThrows(IllegalStateException.class, () -> ProfileStart.start(11, slow, 0));
-        assertTrue(error.getMessage().contains("did not become ready"));
+        assertTrue(error.getMessage().contains("尚未就绪"));
         assertEquals(1, slow.unlocks);
     }
 
@@ -84,7 +84,7 @@ public final class ProfileStartTest {
         for (int changedAt : new int[] {2, 3, 4}) {
             Device device = new Device(); device.recycledAt = changedAt;
             Exception error = assertThrows(IllegalStateException.class, () -> ProfileStart.start(11, device, 0));
-            assertTrue(error.getMessage().contains("identity changed"));
+            assertTrue(error.getMessage().contains("身份已变化"));
             assertEquals(changedAt == 2 ? 0 : 1, device.starts);
             assertEquals(changedAt == 4 ? 1 : 0, device.unlocks);
         }

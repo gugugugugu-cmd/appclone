@@ -46,14 +46,14 @@ public final class InlineInventoryTest {
         assertEquals(22, activity.body.getAdapter().getItemCount());
         String contents = text(activity.body);
         for (int i = 0; i < 20; i++) assertTrue(contents.contains("Account " + i + "\nUser " + (11 + i)));
-        assertTrue(contents.contains("Disabled · Profile running"));
-        assertTrue(contents.contains("Profile stopped"));
+        assertTrue(contents.contains("已停用 · 分身运行中"));
+        assertTrue(contents.contains("分身已停止"));
         assertNull(shadowOf(activity).getNextStartedActivity());
         find(activity.body.header, EditText.class).setText("Account 19");
         assertEquals(22, activity.body.getAdapter().getItemCount());
         find(activity.body.header, EditText.class).setText("no match");
         assertEquals(2, activity.body.getAdapter().getItemCount());
-        assertTrue(text(activity.body).contains("No matches"));
+        assertTrue(text(activity.body).contains("没有匹配结果"));
         controller.destroy();
     }
 
