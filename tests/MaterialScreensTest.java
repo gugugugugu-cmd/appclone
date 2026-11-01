@@ -33,6 +33,18 @@ public final class MaterialScreensTest {
         return new Inventory(Collections.singletonList(profile), Arrays.asList(chat, system));
     }
 
+    /** Writes rendered text next to the build so CI can show what the UI really said. */
+    static void dump(String name, String contents) {
+        try {
+            java.nio.file.Path dir = java.nio.file.Paths.get(
+                    System.getProperty("java.io.tmpdir"), "appclone-ui");
+            java.nio.file.Files.createDirectories(dir);
+            java.nio.file.Files.write(dir.resolve(name + ".txt"),
+                    contents.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            System.out.println("UI[" + name + "]=" + contents.replace("\n", "|"));
+        } catch (Exception ignored) { }
+    }
+
     @Test public void appFirstEmptyStateAndSystemFilter() {
         ActivityController<MainActivity> controller = Robolectric.buildActivity(MainActivity.class).create();
         MainActivity activity = controller.get();
@@ -40,9 +52,11 @@ public final class MaterialScreensTest {
         activity.inventory = new Inventory(Collections.emptyList(), Collections.emptyList());
         activity.render();
         String empty = text(activity.body);
+        dump("empty-state", empty);
         assertTrue("empty state: " + empty, empty.contains("还没有分身应用"));
         activity.inventory = fixture(); activity.render();
         String listed = text(activity.body);
+        dump("listed", listed);
         assertTrue("heading: " + listed, listed.contains("Chat\ncom.chat\n1 个分身"));
         assertTrue("subtitle: " + listed, listed.contains("Personal\n用户 11"));
         assertTrue("state: " + listed, listed.contains("已停用 · 分身已停止"));
@@ -136,6 +150,7 @@ public final class MaterialScreensTest {
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
         String body = text(dialog.getWindow().getDecorView());
+        dump("background-dialog", body);
         assertTrue("dialog location: " + body, body.contains("Personal · 用户 11"));
         assertTrue("dialog explanation: " + body, body.contains("通知和任务可能被延迟"));
         assertEquals("限制", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
