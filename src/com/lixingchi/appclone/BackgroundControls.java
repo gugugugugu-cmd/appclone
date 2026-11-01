@@ -8,7 +8,7 @@ final class BackgroundControls {
     static void open(InventoryActivity activity, Inventory.Entry entry, Inventory.Profile profile) {
         BackgroundPolicy policy = BackgroundPolicy.get(activity);
         BackgroundPolicy.State[] state = new BackgroundPolicy.State[1];
-        activity.work("Reading background setting…", () -> {
+        activity.work("正在读取后台设置…", () -> {
             synchronized (Clones.class) {
                 state[0] = policy.read(profile.clone.id, profile.serial, entry.app.pkg);
                 policy.previous(profile.clone.id, profile.serial, entry.app.pkg);
@@ -28,26 +28,26 @@ final class BackgroundControls {
                 + (state.uidMode == -1 ? "" : "\nUID-wide override: " + BackgroundPolicy.name(state.uidMode) + " (managed elsewhere)")
                 + (saved == null ? "\nNo previous setting saved." : "\nPrevious: " + BackgroundPolicy.name(saved.mode))
                 + "\n\nRestrict limits Android background activity (RUN_ANY_IN_BACKGROUND). Notifications and jobs may be delayed. "
-                + "It does not stop this profile, disable the app or freeze its processes. No setting changes until you choose an action.";
-        MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(activity).setTitle("Background activity")
-                .setMessage(message).setNegativeButton("Keep current", null);
+                + "这不会停止分身、停用应用或冻结其进程。在你选择一个操作前不会改动任何设置。";
+        MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(activity).setTitle("后台活动")
+                .setMessage(message).setNegativeButton("保持当前", null);
         if (saved != null) {
-            dialog.setPositiveButton("Restore previous", (d, which) -> activity.work("Restoring background setting…", () -> {
+            dialog.setPositiveButton("恢复之前设置", (d, which) -> activity.work("正在恢复后台设置…", () -> {
                 policy.restore(user, serial, pkg, state);
                 return new Shell.Result(0, "");
-            }, () -> Toast.makeText(activity, "Previous background setting restored", Toast.LENGTH_LONG).show(), false));
-            dialog.setNeutralButton("Forget saved setting", (d, which) -> new MaterialAlertDialogBuilder(activity)
-                    .setTitle("Forget previous setting?")
+            }, () -> Toast.makeText(activity, "已恢复之前的后台设置", Toast.LENGTH_LONG).show(), false));
+            dialog.setNeutralButton("忘记已保存的设置", (d, which) -> new MaterialAlertDialogBuilder(activity)
+                    .setTitle("忘记之前的设置？")
                     .setMessage(target + "\n\nAndroid's current setting stays unchanged. This removes only App Clone's restore record; Restore will no longer be available.")
-                    .setNegativeButton("Cancel", null).setPositiveButton("Forget", (confirm, button) -> activity.work("Forgetting saved setting…", () -> {
+                    .setNegativeButton("取消", null).setPositiveButton("忘记", (confirm, button) -> activity.work("正在清除已保存设置…", () -> {
                         policy.forget(user, serial, pkg, saved);
                         return new Shell.Result(0, "");
                     }, null, false)).show());
         } else if (state.mode != BackgroundPolicy.RESTRICTED && state.uidMode == -1) {
-            dialog.setPositiveButton("Restrict", (d, which) -> activity.work("Restricting background activity…", () -> {
+            dialog.setPositiveButton("限制", (d, which) -> activity.work("正在限制后台活动…", () -> {
                 policy.restrict(user, serial, pkg, state);
                 return new Shell.Result(0, "");
-            }, () -> Toast.makeText(activity, "Background restricted; previous setting saved", Toast.LENGTH_LONG).show(), false));
+            }, () -> Toast.makeText(activity, "后台已受限，之前的设置已保存", Toast.LENGTH_LONG).show(), false));
         }
         dialog.show();
     }

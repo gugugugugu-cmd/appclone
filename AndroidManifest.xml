@@ -34,9 +34,9 @@
         <activity android:name=".AppDetailActivity" android:exported="false"
             android:label="Clone app" android:parentActivityName=".MainActivity" />
         <activity android:name=".CloneDetailActivity" android:exported="false"
-            android:label="Clone" android:parentActivityName=".MainActivity" />
+            android:label="分身" android:parentActivityName=".MainActivity" />
         <activity android:name=".SettingsActivity" android:exported="false"
-            android:label="Settings" android:parentActivityName=".MainActivity" />
+            android:label="设置" android:parentActivityName=".MainActivity" />
         <activity android:name=".LaunchActivity" android:exported="true"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.AppClone.Launch" />

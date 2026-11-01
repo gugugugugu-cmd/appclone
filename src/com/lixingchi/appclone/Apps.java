@@ -26,7 +26,7 @@ final class Apps {
             String trimmed = line.trim();
             if (trimmed.isEmpty()) continue;
             if (!trimmed.startsWith("package:") || !validPackage(trimmed.substring(8))) {
-                throw new IllegalStateException("Could not read apps for user " + userId + ": " + trimmed);
+                throw new IllegalStateException("无法读取该用户的应用：" + userId + ": " + trimmed);
             }
             packages.add(trimmed.substring(8));
         }
@@ -45,13 +45,13 @@ final class Apps {
 
     static Shell.Result change(int id, long serial, String pkg, Action action,
                                Function<String, Shell.Result> run) {
-        if (!validPackage(pkg) || action == null) return new Shell.Result(-1, "Invalid app action.");
+        if (!validPackage(pkg) || action == null) return new Shell.Result(-1, "无效的应用操作。");
         Shell.Result checked = Clones.verify(id, serial, run);
         if (!checked.ok()) return checked;
         try {
             boolean installed = packages(id, "", run).contains(pkg);
-            if (action == Action.INSTALL && installed) return new Shell.Result(-1, "Already in this profile.");
-            if (action != Action.INSTALL && !installed) return new Shell.Result(-1, "App is no longer in this profile.");
+            if (action == Action.INSTALL && installed) return new Shell.Result(-1, "该应用已在此分身中。");
+            if (action != Action.INSTALL && !installed) return new Shell.Result(-1, "该应用已不在这个分身里。");
             String command;
             switch (action) {
                 case INSTALL: command = "pm install-existing"; break;
@@ -65,14 +65,14 @@ final class Apps {
             if (!result.ok()) return result;
             if (action == Action.INSTALL || action == Action.REMOVE) {
                 boolean present = packages(id, "", run).contains(pkg);
-                if (present != (action == Action.INSTALL)) return new Shell.Result(-1, "App installation state did not change.\n" + result.out);
+                if (present != (action == Action.INSTALL)) return new Shell.Result(-1, "应用安装状态没有变化。\n" + result.out);
             } else if (action != Action.FORCE_STOP) {
                 String state = action == Action.DISABLE ? "disabled-user" : action == Action.ENABLE ? "enabled" : "default";
-                if (!result.trim().equals("Package " + pkg + " new state: " + state)) {
-                    return new Shell.Result(-1, "Could not verify app state.\n" + result.out);
+                if (!result.trim().equals("包名 " + pkg + " new state: " + state)) {
+                    return new Shell.Result(-1, "无法确认应用状态。\n" + result.out);
                 }
                 if (action != Action.DEFAULT && packages(id, "-d ", run).contains(pkg) != (action == Action.DISABLE)) {
-                    return new Shell.Result(-1, "App enabled state did not change.");
+                    return new Shell.Result(-1, "应用启用状态没有变化。");
                 }
             } else {
                 Shell.Result dump = run.apply("dumpsys package " + Clones.quote(pkg));
@@ -80,7 +80,7 @@ final class Apps {
                 java.util.regex.Matcher state = java.util.regex.Pattern.compile(
                         "(?m)^\\s*User " + id + ": ([^\\r\\n]*)").matcher(dump.out);
                 if (!state.find() || !state.group(1).contains("stopped=true")) {
-                    return new Shell.Result(-1, "Could not verify force-stop. Refresh before retrying.");
+                    return new Shell.Result(-1, "无法确认强制停止结果，请刷新后重试。");
                 }
             }
             return result;
@@ -93,7 +93,7 @@ final class Apps {
 
     static Shell.Result launch(int userId, long serial, App app, Function<String, Shell.Result> run) {
         if (app == null || !validPackage(app.pkg) || app.activity == null)
-            return new Shell.Result(-1, "Invalid app shortcut.");
+            return new Shell.Result(-1, "无效的应用快捷方式。");
         try { return run.apply(AppCommand.command("launch", userId, serial, app.pkg, app.activity)); }
         catch (RuntimeException error) { return new Shell.Result(-1, error.toString()); }
     }

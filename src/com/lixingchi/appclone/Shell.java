@@ -27,10 +27,24 @@ final class Shell {
     }
 
     private static final long TIMEOUT_SECONDS = 30;
+    /**
+     * Stopping a user waits for its encrypted storage to lock. vold keeps
+     * retrying while app files stay open and has been measured waiting over 99
+     * seconds before giving up, so the generic 30 s budget is far too short: the
+     * caller gave up while the system was still mutating the user, which is how
+     * a clone ends up half-stopped and unable to unlock again.
+     */
+    static final long STOP_TIMEOUT_SECONDS = 180;
 
     static Result root(String command) {
+        return root(command, TIMEOUT_SECONDS);
+    }
+
+    static Result root(String command, long timeoutSeconds) {
+        // /system/bin/su is only tried when su is not on PATH (upstream behaviour).
         return run(new ProcessBuilder("su", "-c", command),
-                new ProcessBuilder("/system/bin/su", "-c", command), TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                new ProcessBuilder("/system/bin/su", "-c", command),
+                timeoutSeconds, TimeUnit.SECONDS);
     }
 
     static Result run(ProcessBuilder command, long timeout, TimeUnit unit) {
@@ -63,16 +77,16 @@ final class Shell {
             reader.setDaemon(true);
             reader.start();
             if (!process.waitFor(timeout, unit)) {
-                return new Result(-1, "Root command timed out. Refresh the profile state before retrying.");
+                return new Result(-1, "Root 命令超时，请刷新分身状态后重试。");
             }
             return new Result(process.exitValue(), output.get(1, TimeUnit.SECONDS));
         } catch (IOException e) {
             return new Result(-1, fallback == null ? e.toString()
-                    : "Cannot start the root shell. Check that root is active and App Clone is allowed in your root manager, "
+                    : "无法启动 root shell。请确认 Root 已生效、且 Root 管理器里允许了 App Clone，"
                     + "then reopen the app and tap Retry. LSPosed scope alone does not grant root.\n" + e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return new Result(-1, "Root command interrupted. Refresh the profile state before retrying.");
+            return new Result(-1, "Root 命令被中断，请刷新分身状态后重试。");
         } catch (Exception e) {
             return new Result(-1, e.toString());
         } finally {

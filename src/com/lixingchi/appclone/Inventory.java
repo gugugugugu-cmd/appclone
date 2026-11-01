@@ -61,7 +61,7 @@ final class Inventory {
                 entry.icon = pm.getApplicationIcon(info);
                 return entry;
             } catch (PackageManager.NameNotFoundException error) {
-                throw new IllegalStateException("Cannot read metadata for " + pkg + "; refresh and retry.");
+                throw new IllegalStateException("无法读取元数据：" + pkg + "; refresh and retry.");
             }
         }));
     }
@@ -70,7 +70,7 @@ final class Inventory {
         UserManager users = context.getSystemService(UserManager.class);
         android.os.UserHandle handle = CloneApps.userHandle(id);
         long serial = handle == null || users == null ? -1 : users.getSerialNumberForUser(handle);
-        if (serial < 0) throw new IllegalStateException("Cannot identify profile " + id);
+        if (serial < 0) throw new IllegalStateException("无法识别分身：" + id);
         return serial;
     }
 
@@ -104,7 +104,7 @@ final class Inventory {
     }
 
     static String state(Profile profile, String pkg) {
-        return (profile.disabled.contains(pkg) ? "Disabled · " : "")
-                + (profile.clone.running ? "Profile running" : "Profile stopped");
+        return (profile.disabled.contains(pkg) ? "已停用 · " : "")
+                + (profile.clone.running ? "分身运行中" : "分身已停止");
     }
 }

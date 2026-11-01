@@ -12,24 +12,24 @@ import java.util.Locale;
 final class Diagnostics {
     static String collect(Context context) {
         StringBuilder out = new StringBuilder();
-        out.append("App Clone diagnostics\n");
-        out.append("Generated: ").append(stamp("yyyy-MM-dd HH:mm:ss")).append('\n');
-        out.append("App: ").append(version(context)).append('\n');
-        out.append("App UID: ").append(android.os.Process.myUid()).append('\n');
-        out.append("App PATH: ").append(System.getenv("PATH")).append('\n');
-        out.append("Device: ").append(Build.MANUFACTURER).append(' ')
+        out.append("App Clone 诊断信息\n");
+        out.append("生成时间：").append(stamp("yyyy-MM-dd HH:mm:ss")).append('\n');
+        out.append("应用：").append(version(context)).append('\n');
+        out.append("应用 UID：").append(android.os.Process.myUid()).append('\n');
+        out.append("应用 PATH：").append(System.getenv("PATH")).append('\n');
+        out.append("设备：").append(Build.MANUFACTURER).append(' ')
                 .append(Build.MODEL).append('\n');
-        out.append("Android: ").append(Build.VERSION.RELEASE)
+        out.append("Android：").append(Build.VERSION.RELEASE)
                 .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")\n");
-        out.append("Build: ").append(Build.DISPLAY).append('\n');
-        out.append("Fingerprint: ").append(Build.FINGERPRINT).append('\n');
-        out.append("Review this file for personal data before attaching it.\n");
+        out.append("构建：").append(Build.DISPLAY).append('\n');
+        out.append("指纹：").append(Build.FINGERPRINT).append('\n');
+        out.append("附加到 issue 前请先检查其中是否含个人数据。\n");
 
         BootPolicy boot = BootPolicy.get(context);
-        section(out, "Reboot policy", boot.mode() + "\n" + boot.status());
-        section(out, "Last create error",
+        section(out, "重启策略", boot.mode() + "\n" + boot.status());
+        section(out, "最近一次创建错误",
                 Clones.lastCreateError == null ? "none this session" : Clones.lastCreateError);
-        section(out, "Root access (su from PATH; /system/bin/su only if not found)", shell("id"));
+        section(out, "Root 访问（优先 PATH 里的 su，找不到才用 /system/bin/su）", shell("id"));
         section(out, "cmd user list -v", shell("cmd user list -v"));
         section(out, "dumpsys user", shell("dumpsys user"));
         section(out, "logcat (filtered)",

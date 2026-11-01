@@ -26,7 +26,7 @@ public final class ShellTest {
         long start = System.nanoTime();
         Shell.Result timeout = Shell.run(child("sleep"), 200, TimeUnit.MILLISECONDS);
         long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-        check(!timeout.ok() && timeout.out.contains("timed out"), "silent process times out");
+        check(!timeout.ok() && timeout.out.contains("超时"), "silent process times out");
         check(elapsed < 5000, "timeout must not wait for EOF: " + elapsed + "ms");
         for (String message : new String[] {"Cannot run program \"su\": error=2, No such file or directory",
                 "Exec failed, error: 2 (No such file or directory)"}) {

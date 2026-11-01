@@ -30,9 +30,9 @@ public final class BootJob extends JobService {
                     policy.apply(run, mode, () -> !task.cancelled, Shell::root);
                 }
             } catch (RuntimeException e) {
-                Log.e("AppClone", "Reboot action failed", e);
+                Log.e("AppClone", "重启操作失败", e);
                 try { policy.fail(run, mode, e.toString()); }
-                catch (RuntimeException storageFailure) { Log.e("AppClone", "Could not save reboot error", storageFailure); }
+                catch (RuntimeException storageFailure) { Log.e("AppClone", "无法保存重启错误", storageFailure); }
             } finally {
                 CloneApplication.inventory(this).invalidate();
                 new Handler(getMainLooper()).post(() -> {

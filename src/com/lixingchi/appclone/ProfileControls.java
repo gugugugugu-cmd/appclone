@@ -19,11 +19,11 @@ final class ProfileControls {
 
     static void menu(InventoryActivity activity, Inventory.Profile profile, View anchor) {
         PopupMenu menu = new PopupMenu(activity, anchor);
-        menu.getMenu().add(0, 1, 0, "View apps");
-        menu.getMenu().add(0, 2, 1, "Add app");
-        menu.getMenu().add(0, 3, 2, "Rename profile");
-        menu.getMenu().add(0, 4, 3, profile.clone.running ? "Stop profile" : "Start profile");
-        menu.getMenu().add(0, 5, 4, "Delete profile");
+        menu.getMenu().add(0, 1, 0, "查看应用");
+        menu.getMenu().add(0, 2, 1, "添加应用");
+        menu.getMenu().add(0, 3, 2, "重命名分身");
+        menu.getMenu().add(0, 4, 3, profile.clone.running ? "停止分身" : "启动分身");
+        menu.getMenu().add(0, 5, 4, "删除分身");
         menu.setOnMenuItemClickListener(item -> {
             switch (item.getItemId()) {
                 case 1: open(activity, profile); break;
@@ -41,32 +41,32 @@ final class ProfileControls {
     static void rename(InventoryActivity activity, Inventory.Profile profile) {
         LinearLayout form = Ui.column(activity);
         form.setPadding(Ui.dp(activity, 24), 0, Ui.dp(activity, 24), Ui.dp(activity, 8));
-        form.addView(Ui.text(activity, "User " + profile.clone.id + " · Serial " + profile.serial
+        form.addView(Ui.text(activity, "用户 " + profile.clone.id + " · Serial " + profile.serial
                 + "\nChanges the profile name for all its apps. Data and running state stay unchanged. "
-                + "Existing shortcut labels stay unchanged; re-pin them if you want new labels.", 14, R.color.muted, false));
-        EditText name = Ui.input(activity, form, "Profile name");
+                + "已有快捷方式的名称不变，想要新名称请重新固定。", 14, R.color.muted, false));
+        EditText name = Ui.input(activity, form, "分身名称");
         name.setText(profile.clone.name);
         name.selectAll();
         ScrollView scroll = new ScrollView(activity);
         scroll.addView(form);
-        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("Rename profile")
-                .setView(scroll).setNegativeButton("Cancel", null).setPositiveButton("Save", null).create();
+        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("重命名分身")
+                .setView(scroll).setNegativeButton("取消", null).setPositiveButton("保存", null).create();
         dialog.setOnShowListener(unused -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String typed = name.getText().toString();
             try { ProfileRename.validate(typed); }
             catch (IllegalArgumentException error) { name.setError(error.getMessage()); return; }
             dialog.dismiss();
             if (typed.equals(profile.clone.name)) return;
-            activity.work("Renaming profile…", () -> Clones.rename(profile.clone.id, profile.serial, typed), null);
+            activity.work("正在重命名…", () -> Clones.rename(profile.clone.id, profile.serial, typed), null);
         }));
         dialog.show();
     }
 
     static void remove(InventoryActivity activity, Inventory.Profile profile, Runnable success) {
-        new MaterialAlertDialogBuilder(activity).setTitle("Delete profile?")
+        new MaterialAlertDialogBuilder(activity).setTitle("删除分身？")
                 .setMessage(Inventory.location(profile) + "\n\nDeletes ALL app data in this profile, including system apps hidden by the filter. Other profiles and the main user are untouched.")
-                .setNegativeButton("Cancel", null).setPositiveButton("Delete", (dialog, which) ->
-                        activity.work("Deleting profile…", () -> Clones.remove(profile.clone.id, profile.serial), success)).show();
+                .setNegativeButton("取消", null).setPositiveButton("删除", (dialog, which) ->
+                        activity.work("正在删除分身…", () -> Clones.remove(profile.clone.id, profile.serial), success)).show();
     }
 
     private ProfileControls() { }

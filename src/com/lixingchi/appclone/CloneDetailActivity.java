@@ -21,12 +21,12 @@ public final class CloneDetailActivity extends InventoryActivity {
         id = getIntent().getIntExtra(EXTRA_ID, -1);
         serial = getIntent().getLongExtra(EXTRA_SERIAL, -1);
         LinearLayout root = Ui.column(this);
-        toolbar = Ui.toolbar(this, root, "Profile", true);
-        toolbar.getMenu().add(0, 1, 0, "Start / stop profile");
-        toolbar.getMenu().add(0, 2, 1, "Show system apps").setCheckable(true).setChecked(Settings.systemApps(this));
-        toolbar.getMenu().add(0, 3, 2, "Delete profile");
-        toolbar.getMenu().add(0, 4, 3, "Refresh");
-        toolbar.getMenu().add(0, 5, 0, "Rename profile");
+        toolbar = Ui.toolbar(this, root, "分身", true);
+        toolbar.getMenu().add(0, 1, 0, "启动 / 停止分身");
+        toolbar.getMenu().add(0, 2, 1, "显示系统应用").setCheckable(true).setChecked(Settings.systemApps(this));
+        toolbar.getMenu().add(0, 3, 2, "删除分身");
+        toolbar.getMenu().add(0, 4, 3, "刷新");
+        toolbar.getMenu().add(0, 5, 0, "重命名分身");
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == 4) { refresh(); return true; }
             Inventory.Profile profile = current();
@@ -41,7 +41,7 @@ public final class CloneDetailActivity extends InventoryActivity {
         useList(new InventoryList(this));
         if (state != null) body.restorePosition(state.getParcelable("listPosition"));
         root.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
-        add = Ui.addAction(this, root, "Add app to profile");
+        add = Ui.addAction(this, root, "把应用加到分身");
         Ui.applyInsets(root, 0, 0, 0, 0, add);
         add.setOnClickListener(v -> { Inventory.Profile profile = current(); if (profile != null) AddClone.chooseApp(this, profile); });
         setContentView(root);
@@ -58,22 +58,22 @@ public final class CloneDetailActivity extends InventoryActivity {
         Inventory.Profile profile = current();
         add.setEnabled(profile != null);
         if (profile == null) {
-            status.setText("Profile removed or replaced. Return to Profiles and refresh.");
-            rows.add(InventoryList.Item.empty("Profile unavailable", "Return to Profiles and refresh before taking any action."));
+            status.setText("分身已被删除或替换，请返回「分身」页刷新。");
+            rows.add(InventoryList.Item.empty("分身不可用", "请返回「分身」页刷新后再操作。"));
             body.show(rows);
             return;
         }
         toolbar.setTitle(profile.clone.name);
-        toolbar.getMenu().findItem(1).setTitle(profile.clone.running ? "Stop profile" : "Start profile");
+        toolbar.getMenu().findItem(1).setTitle(profile.clone.running ? "停止分身" : "启动分身");
         int count = 0;
         for (Inventory.Entry entry : inventory.apps) {
             if (!profile.packages.contains(entry.app.pkg) || (entry.system && !Settings.systemApps(this))) continue;
             count++;
             rows.add(InventoryList.Item.instance(entry, profile, true));
         }
-        status.setText("User " + id + " · " + (profile.clone.running ? "Running" : "Stopped")
+        status.setText("用户 " + id + " · " + (profile.clone.running ? "运行中" : "已停止")
                 + " · " + count + " apps" + (Settings.systemApps(this) ? "" : " · System apps hidden"));
-        if (count == 0) rows.add(InventoryList.Item.empty("No apps to show", "Add an app or show system apps from the menu."));
+        if (count == 0) rows.add(InventoryList.Item.empty("没有可显示的应用", "从菜单里添加应用，或显示系统应用。"));
         body.show(rows);
     }
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Static package checks for App Clone. No Android SDK, JDK, or device required."""
+import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
@@ -36,9 +37,12 @@ def test_scope_is_system():
 
 
 def test_source_link_is_public():
-    url = "https://github.com/doccstat/appclone"
-    assert url in (ROOT / "README.md").read_text()
-    assert url in (ROOT / "src/com/lixingchi/appclone/SettingsActivity.java").read_text()
+    # README keeps pointing at upstream; the app links to the build it came from.
+    assert "https://github.com/doccstat/appclone" in (ROOT / "README.md").read_text()
+    fork = "https://github.com/gugugugugu-cmd/appclone"
+    source = ROOT / "src/com/lixingchi/appclone"
+    assert fork in (source / "MainActivity.java").read_text()
+    assert fork in (source / "SettingsActivity.java").read_text()
 
 
 def test_build_self_check_package():
@@ -56,7 +60,8 @@ def test_lifecycle_entrypoints():
     launcher = (source / "LaunchActivity.java").read_text()
     assert launcher.index("new Thread(") < launcher.index("Apps.launch(user, serial, app)")
     assert "CloneApplication.inventory(this).afterLaunch(user, result.ok())" in launcher
-    assert "runOnUiThread" in launcher and "Could not open clone app" in launcher
+    # Fork localises the message; match the call site, not the wording.
+    assert "runOnUiThread" in launcher and "无法打开分身应用" in launcher
     assert "LaunchActivity.class" in (source / "AppControls.java").read_text()
     assert "LaunchActivity.class" in (source / "Shortcuts.java").read_text()
     assert 'AppControls.power(activity, profile)' in (source / "ProfileControls.java").read_text()

@@ -18,7 +18,7 @@ final class AddClone {
     static void chooseApp(InventoryActivity activity, Inventory.Profile destination) {
         if (activity.inventory == null) return;
         final List<Apps.App> apps = new ArrayList<>();
-        activity.work("Reading available apps…", () -> {
+        activity.work("正在读取可用应用…", () -> {
             PackageManager pm = activity.getPackageManager();
             for (ApplicationInfo info : pm.getInstalledApplications(0)) {
                 if (info.packageName.equals(activity.getPackageName())) continue;
@@ -34,7 +34,7 @@ final class AddClone {
     private static void picker(InventoryActivity activity, List<Apps.App> apps, Inventory.Profile destination) {
         LinearLayout form = Ui.column(activity);
         form.setPadding(Ui.dp(activity, 24), 0, Ui.dp(activity, 24), 0);
-        EditText search = Ui.input(activity, form, "Search apps or packages");
+        EditText search = Ui.input(activity, form, "搜索应用或包名");
         ListView list = new ListView(activity);
         form.addView(list, new LinearLayout.LayoutParams(-1, Ui.dp(activity, 320)));
         List<Apps.App> shown = new ArrayList<>();
@@ -53,8 +53,8 @@ final class AddClone {
             public void afterTextChanged(Editable s) {}
         });
         filter.run();
-        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("Add clone app")
-                .setView(form).setNegativeButton("Cancel", null).create();
+        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("添加分身应用")
+                .setView(form).setNegativeButton("取消", null).create();
         list.setOnItemClickListener((parent, view, position, id) -> {
             Apps.App app = shown.get(position);
             dialog.dismiss();
@@ -62,7 +62,7 @@ final class AddClone {
             else install(activity, app, destination);
         });
         dialog.show();
-        if (apps.isEmpty()) search.setHint("No available apps (system filter is in the menu)");
+        if (apps.isEmpty()) search.setHint("没有可用应用（系统筛选在菜单里）");
     }
 
     static void chooseProfile(InventoryActivity activity, Apps.App app) {
@@ -73,51 +73,59 @@ final class AddClone {
             choices.add(profile);
             labels.add(Inventory.location(profile) + (profile.clone.running ? " · Running" : " · Stopped"));
         }
-        new MaterialAlertDialogBuilder(activity).setTitle("Add " + app.label + " to…")
+        new MaterialAlertDialogBuilder(activity).setTitle("添加 " + app.label + " to…")
                 .setItems(labels.toArray(new String[0]), (dialog, which) -> install(activity, app, choices.get(which)))
-                .setNeutralButton("New profile", (dialog, which) -> create(activity, app))
-                .setNegativeButton("Cancel", null).show();
+                .setNeutralButton("新建分身", (dialog, which) -> create(activity, app))
+                .setNegativeButton("取消", null).show();
     }
 
     private static void install(InventoryActivity activity, Apps.App app, Inventory.Profile profile) {
-        new MaterialAlertDialogBuilder(activity).setTitle("Add clone?")
+        new MaterialAlertDialogBuilder(activity).setTitle("添加分身？")
                 .setMessage(app.label + "\n" + Inventory.location(profile)
                         + "\n\nUses the existing profile. Other apps and the profile's running state are unchanged.")
-                .setNegativeButton("Cancel", null).setPositiveButton("Add", (dialog, which) -> activity.work("Adding clone…",
-                        () -> Apps.change(profile.clone.id, profile.serial, app.pkg, Apps.Action.INSTALL),
+                .setNegativeButton("取消", null).setPositiveButton("添加", (dialog, which) -> activity.work("正在添加…",
+                        () -> {
+                            Shell.Result installed =
+                                    Apps.change(profile.clone.id, profile.serial, app.pkg, Apps.Action.INSTALL);
+                            // The chosen app is the one the user wants on this clone's
+                            // home screen; anything else that got installed alongside it
+                            // stays out of the drawer.
+                            if (installed.ok()) CloneVisibility.choose(activity, profile.clone.id, app.pkg, true);
+                            return installed;
+                        },
                         () -> autoPin(activity, app, profile.clone.id, profile.clone.name, profile.serial))).show();
     }
 
     static void create(InventoryActivity activity, Apps.App app) {
         LinearLayout form = Ui.column(activity);
         form.setPadding(Ui.dp(activity, 24), 0, Ui.dp(activity, 24), 0);
-        EditText name = Ui.input(activity, form, "Profile name");
-        name.setText("Clone Profile");
-        EditText count = Ui.input(activity, form, "How many profiles (1–500)");
+        EditText name = Ui.input(activity, form, "分身名称");
+        name.setText("分身");
+        EditText count = Ui.input(activity, form, "分身数量（1–500）");
         count.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         count.setText("1");
         com.google.android.material.checkbox.MaterialCheckBox append = new com.google.android.material.checkbox.MaterialCheckBox(activity);
-        append.setText("Append -1, -2, … to names");
+        append.setText("在名称后追加 -1、-2 …");
         append.setChecked(false);
         form.addView(append);
-        form.addView(Ui.text(activity, "Creates and starts the requested profiles. Names are kept exactly as entered unless numbering is selected."
+        form.addView(Ui.text(activity, "创建并启动指定数量的分身。名称按输入原样保留，除非勾选了自动编号。"
                 + (app == null ? "" : "\nThen installs " + app.label + ". If installation fails, the new profile is kept."),
                 14, R.color.muted, false));
         android.widget.ScrollView scroll = new android.widget.ScrollView(activity);
         scroll.addView(form);
-        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("New profile")
-                .setView(scroll).setNegativeButton("Cancel", null).setPositiveButton("Create", null).create();
+        AlertDialog dialog = new MaterialAlertDialogBuilder(activity).setTitle("新建分身")
+                .setView(scroll).setNegativeButton("取消", null).setPositiveButton("创建", null).create();
         dialog.setOnShowListener(unused -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String typed = name.getText().toString();
             List<String> names;
             try {
                 List<Clones.Clone> existing = new ArrayList<>();
-                if (activity.inventory == null) throw new IllegalArgumentException("Refresh the profile list first.");
+                if (activity.inventory == null) throw new IllegalArgumentException("请先刷新分身列表。");
                 for (Inventory.Profile profile : activity.inventory.profiles) existing.add(profile.clone);
                 names = Clones.names(typed, Integer.parseInt(count.getText().toString()), append.isChecked(), existing);
             } catch (IllegalArgumentException error) { count.setError(error.getMessage()); return; }
             dialog.dismiss();
-            activity.work("Creating profiles…", () -> {
+            activity.work("正在创建分身…", () -> {
                 int made = 0;
                 for (String profileName : names) {
                     int id = Clones.create(profileName);
@@ -135,6 +143,7 @@ final class AddClone {
                         if (app != null) {
                             Shell.Result installed = Apps.change(id, serial, app.pkg, Apps.Action.INSTALL);
                             if (!installed.ok()) throw new IllegalStateException(installed.out);
+                            CloneVisibility.choose(activity, id, app.pkg, true);
                             if (Settings.autoPin(activity)) activity.runOnUiThread(() -> {
                                 if (!activity.isFinishing() && !activity.isDestroyed()) autoPin(activity, app, id, profileName, serial);
                             });

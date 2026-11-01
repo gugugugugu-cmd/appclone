@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 public final class AppCommand {
     static String command(String action, int user, long serial, String pkg, String... extra) {
         if (user <= 0 || serial < -1 || (!action.equals("launch") && serial < 0) || !Apps.validPackage(pkg))
-            throw new IllegalArgumentException("Invalid clone app identity.");
+            throw new IllegalArgumentException("无效的分身应用标识。");
         StringBuilder cmd = new StringBuilder(ProfileStart.entry(AppCommand.class));
         for (String arg : new String[] {action, Integer.toString(user), Long.toString(serial), pkg})
             cmd.append(' ').append(Clones.quote(arg));
@@ -36,16 +36,16 @@ public final class AppCommand {
     }
 
     private static long verify(int user, long serial, String pkg, Device device) throws Exception {
-        if (user <= 0 || serial < -1 || !Apps.validPackage(pkg)) throw new IllegalArgumentException("Invalid clone app identity.");
+        if (user <= 0 || serial < -1 || !Apps.validPackage(pkg)) throw new IllegalArgumentException("无效的分身应用标识。");
         long actual = device.verify(user);
-        if (serial != -1 && actual != serial) throw new IllegalStateException("Profile identity changed. Refresh before retrying.");
+        if (serial != -1 && actual != serial) throw new IllegalStateException("分身身份已变化，请刷新后重试。");
         return actual;
     }
 
     static Shell.Result launch(int user, long serial, String pkg, String activity, Device device) throws Exception {
         serial = verify(user, serial, pkg, device);
         Target before = device.app(user, pkg);
-        if (!before.enabled) throw new IllegalStateException("App is disabled. Enable it explicitly before opening.");
+        if (!before.enabled) throw new IllegalStateException("应用已停用，请先手动启用再打开。");
         ProfileStart.start(user, device, 20_000, serial);
         String component = pkg + "/" + activity;
         if (activity.isEmpty()) {
@@ -54,13 +54,13 @@ public final class AppCommand {
             if (!resolved.ok()) return resolved;
             component = null;
             for (String line : resolved.out.split("\n")) if (line.trim().startsWith(pkg + "/")) component = line.trim();
-            if (component == null) return new Shell.Result(-1, "No enabled launcher activity in this profile.");
+            if (component == null) return new Shell.Result(-1, "这个分身里该应用没有可用的启动入口。");
         }
         verify(user, serial, pkg, device);
         Target now = device.app(user, pkg);
         if (!now.enabled || now.uid != before.uid || now.installed != before.installed)
-            throw new IllegalStateException("App changed while opening. Refresh before retrying.");
-        if (!device.unlocked(user)) throw new IllegalStateException("Profile is no longer unlocked. Refresh before retrying.");
+            throw new IllegalStateException("打开时应用发生了变化，请刷新后重试。");
+        if (!device.unlocked(user)) throw new IllegalStateException("分身已不再处于解锁状态，请刷新后重试。");
         Shell.Result result = device.shell("cmd activity start-activity --user " + user
                 + " -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n " + Clones.quote(component));
         return result.ok() && java.util.regex.Pattern.compile("(?m)^Error(?: type \\d+|:)").matcher(result.out).find()
@@ -72,10 +72,10 @@ public final class AppCommand {
         verify(user, serial, pkg, device);
         Target target = device.app(user, pkg);
         if (target.shared || target.uid % 100000 < android.os.Process.FIRST_APPLICATION_UID)
-            throw new IllegalStateException("Shared/system UID apps cannot be restricted independently.");
+            throw new IllegalStateException("共享或系统 UID 的应用无法单独限制。");
         BackgroundPolicy.State state = device.background(user, pkg);
         if (state.uid != target.uid || state.installed != target.installed)
-            throw new IllegalStateException("App identity changed. Refresh before retrying.");
+            throw new IllegalStateException("应用身份已变化，请刷新后重试。");
         verify(user, serial, pkg, device);
         return state;
     }
@@ -83,19 +83,19 @@ public final class AppCommand {
     static BackgroundPolicy.State set(int user, long serial, String pkg, BackgroundPolicy.State expected,
                                       int mode, Device device) throws Exception {
         BackgroundPolicy.State current = read(user, serial, pkg, device);
-        if (!current.equals(expected)) throw new IllegalStateException("Background setting changed. Reopen its controls.");
+        if (!current.equals(expected)) throw new IllegalStateException("后台设置已改变，请重新打开控制面板。");
         if (current.uidMode != -1) throw new IllegalStateException("A UID-wide override is controlled elsewhere; nothing changed.");
         BackgroundPolicy.State desired = current.withMode(mode);
         device.background(current.uid, pkg, mode);
         if (!read(user, serial, pkg, device).equals(desired))
-            throw new IllegalStateException("Could not verify background setting. The saved previous mode is retained.");
+            throw new IllegalStateException("无法确认后台设置，已保存的之前模式仍保留。");
         return desired;
     }
 
     public static void main(String[] args) {
         try {
-            if (android.os.Process.myUid() != 0) throw new IllegalStateException("Root is required.");
-            if (args.length < 4) throw new IllegalArgumentException("Expected action, user, serial and package.");
+            if (android.os.Process.myUid() != 0) throw new IllegalStateException("需要 Root 权限。");
+            if (args.length < 4) throw new IllegalArgumentException("需要操作、用户、序号和包名。");
             int user = Integer.parseInt(args[1]);
             long serial = Long.parseLong(args[2]);
             Device device = new AndroidDevice();
@@ -108,12 +108,12 @@ public final class AppCommand {
             } else if (args[0].equals("background-set") && args.length == 6) {
                 System.out.println(set(user, serial, args[3], BackgroundPolicy.State.parse(args[4]),
                         Integer.parseInt(args[5]), device).encode());
-            } else throw new IllegalArgumentException("Invalid app command.");
+            } else throw new IllegalArgumentException("无效的应用命令。");
         } catch (Exception error) {
             if (error instanceof InterruptedException) Thread.currentThread().interrupt();
             Throwable cause = error;
             while (cause.getCause() != null) cause = cause.getCause();
-            System.err.println("Clone app command failed: " + cause);
+            System.err.println("分身应用命令失败：" + cause);
             System.exit(1);
         }
     }
@@ -130,7 +130,7 @@ public final class AppCommand {
             if (info == null || info.applicationInfo == null || !pkg.equals(info.packageName)
                     || !pkg.equals(info.applicationInfo.packageName) || info.applicationInfo.uid / 100000 != user
                     || (info.applicationInfo.flags & ApplicationInfo.FLAG_INSTALLED) == 0)
-                throw new IllegalStateException("App is not installed in this profile.");
+                throw new IllegalStateException("该应用没有安装在这个分身里。");
             return info;
         }
 
@@ -143,7 +143,7 @@ public final class AppCommand {
 
         @Override public Shell.Result shell(String command) {
             long remaining = deadline - System.nanoTime();
-            if (remaining <= 0) return new Shell.Result(-1, "Clone app command timed out. Refresh before retrying.");
+            if (remaining <= 0) return new Shell.Result(-1, "分身应用命令超时，请刷新后重试。");
             return Shell.run(new ProcessBuilder("/system/bin/sh", "-c", command),
                     Math.min(TimeUnit.SECONDS.toNanos(8), remaining), TimeUnit.NANOSECONDS);
         }

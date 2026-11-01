@@ -18,12 +18,12 @@ public final class AppDetailActivity extends InventoryActivity {
         super.onCreate(state);
         pkg = getIntent().getStringExtra(EXTRA_PKG);
         LinearLayout root = Ui.column(this);
-        toolbar = Ui.toolbar(this, root, "Clone app", true);
-        toolbar.getMenu().add("Refresh").setOnMenuItemClickListener(item -> { refresh(); return true; });
+        toolbar = Ui.toolbar(this, root, "分身应用", true);
+        toolbar.getMenu().add("刷新").setOnMenuItemClickListener(item -> { refresh(); return true; });
         useList(new InventoryList(this));
         if (state != null) body.restorePosition(state.getParcelable("listPosition"));
         root.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
-        add = Ui.addAction(this, root, "Add another clone");
+        add = Ui.addAction(this, root, "再加一个分身");
         Ui.applyInsets(root, 0, 0, 0, 0, add);
         add.setOnClickListener(v -> {
             if (inventory == null) return;
@@ -38,8 +38,8 @@ public final class AppDetailActivity extends InventoryActivity {
         Inventory.Entry entry = inventory == null ? null : inventory.app(pkg);
         add.setEnabled(entry != null);
         if (entry == null) {
-            status.setText("No clones for this app");
-            rows.add(InventoryList.Item.empty("No clones to show", "Return to Apps to add a clone."));
+            status.setText("这个应用还没有分身");
+            rows.add(InventoryList.Item.empty("没有可显示的分身", "返回「应用」去添加分身。"));
         } else {
             toolbar.setTitle(entry.app.label);
             status.setText(entry.profiles.size() + " clones · " + pkg);

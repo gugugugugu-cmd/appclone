@@ -10,7 +10,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 final class AppControls {
     static void bind(InventoryActivity activity, Inventory.Entry entry, Inventory.Profile profile,
                      Button open, View more) {
-        open.setContentDescription("Open " + entry.app.label + " in " + Inventory.location(profile));
+        open.setContentDescription("打开 " + entry.app.label + " in " + Inventory.location(profile));
         open.setEnabled(!profile.disabled.contains(entry.app.pkg));
         open.setOnClickListener(v -> activity.startActivity(new Intent(activity, LaunchActivity.class)
                 .putExtra(LaunchActivity.EXTRA_USER, profile.clone.id)
@@ -18,22 +18,22 @@ final class AppControls {
                 .putExtra(LaunchActivity.EXTRA_PKG, entry.app.pkg)
                 .putExtra(LaunchActivity.EXTRA_ACTIVITY, entry.app.activity)
                 .putExtra(LaunchActivity.EXTRA_LABEL, entry.app.label)));
-        more.setContentDescription("Actions for " + entry.app.label + " in " + Inventory.location(profile));
-        more.setTooltipText("App actions");
+        more.setContentDescription("操作：" + entry.app.label + " in " + Inventory.location(profile));
+        more.setTooltipText("应用操作");
         more.setOnClickListener(v -> menu(activity, entry, profile, more).show());
     }
 
     static PopupMenu menu(InventoryActivity activity, Inventory.Entry entry, Inventory.Profile profile, View anchor) {
         PopupMenu menu = new PopupMenu(activity, anchor);
         boolean disabled = profile.disabled.contains(entry.app.pkg);
-        menu.getMenu().add(0, 1, 0, disabled ? "Enable app" : "Disable app (freeze)");
-        menu.getMenu().add(0, 2, 1, "Use manifest default state");
-        menu.getMenu().add(0, 3, 2, "Force stop app");
-        menu.getMenu().add(0, 4, 3, "Pin shortcut");
-        menu.getMenu().add(0, 6, 4, "Background activity");
-        menu.getMenu().add(0, 7, 5, "Rename profile");
-        menu.getMenu().add(0, 8, 6, "View profile");
-        menu.getMenu().add(0, 5, 7, "Remove from this profile");
+        menu.getMenu().add(0, 1, 0, disabled ? "启用应用" : "停用应用（冻结）");
+        menu.getMenu().add(0, 2, 1, "使用清单默认状态");
+        menu.getMenu().add(0, 3, 2, "强制停止应用");
+        menu.getMenu().add(0, 4, 3, "固定快捷方式");
+        menu.getMenu().add(0, 6, 4, "后台活动");
+        menu.getMenu().add(0, 7, 5, "重命名分身");
+        menu.getMenu().add(0, 8, 6, "查看分身");
+        menu.getMenu().add(0, 5, 7, "从这个分身移除");
         menu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == 7) { ProfileControls.rename(activity, profile); return true; }
             if (item.getItemId() == 8) { ProfileControls.open(activity, profile); return true; }
@@ -61,45 +61,45 @@ final class AppControls {
         String detail;
         switch (action) {
             case DISABLE:
-                title = "Disable app";
-                detail = "Stops this app and its notifications until you explicitly enable it. Data is kept. Other apps in this profile keep running.";
+                title = "停用应用";
+                detail = "停止该应用及其通知，直到你手动启用。数据保留，分身里的其他应用继续运行。";
                 break;
             case ENABLE:
-                title = "Enable app";
-                detail = "Explicitly enables this app. This does not automatically start a stopped profile.";
+                title = "启用应用";
+                detail = "手动启用该应用。不会自动启动已停止的分身。";
                 break;
             case DEFAULT:
-                title = "Use manifest default";
-                detail = "Removes the enabled/disabled override and uses the app manifest's default. It does not reconstruct a previous override.";
+                title = "使用清单默认状态";
+                detail = "清除启用/停用的覆盖设置，回到应用清单的默认值。不会恢复之前某个覆盖值。";
                 break;
             case FORCE_STOP:
-                title = "Force stop app";
-                detail = "Stops this app now without disabling it or deleting data. Notifications may stop until it is opened again. This is not a permanent freeze.";
+                title = "强制停止应用";
+                detail = "立即停止该应用，不停用也不删数据。通知会暂停直到再次打开它。这不是永久冻结。";
                 break;
             default:
-                title = "Remove clone app";
-                detail = "Deletes this app's data in this profile. The profile, its other apps and the main user's copy are kept.";
+                title = "移除分身应用";
+                detail = "删除该应用在这个分身里的数据。分身、其他应用和主用户的副本都保留。";
         }
         new MaterialAlertDialogBuilder(activity).setTitle(title + "?")
                 .setMessage(entry.app.label + "\n" + Inventory.location(profile) + "\n\n" + detail
                         + (entry.system ? "\n\nSystem app: changing it can break other apps in this profile." : ""))
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("取消", null)
                 .setPositiveButton(title, (dialog, which) -> activity.work(title + "…",
                         () -> Apps.change(profile.clone.id, profile.serial, entry.app.pkg, action), null)).show();
     }
 
     static void power(InventoryActivity activity, Inventory.Profile profile) {
         boolean running = profile.clone.running;
-        Runnable change = () -> activity.work(running ? "Stopping profile…" : "Starting profile…", () -> {
+        Runnable change = () -> activity.work(running ? "正在停止分身…" : "正在启动分身…", () -> {
             synchronized (Clones.class) {
                 Shell.Result checked = Clones.verify(profile.clone.id, profile.serial, Shell::root);
                 return checked.ok() ? Clones.setRunning(profile.clone.id, !running) : checked;
             }
         }, null);
         if (!running) { change.run(); return; }
-        new MaterialAlertDialogBuilder(activity).setTitle("Stop profile?")
+        new MaterialAlertDialogBuilder(activity).setTitle("停止分身？")
                 .setMessage(Inventory.location(profile) + "\n\nStops ALL apps and notifications in this profile, keeping data. "
-                        + "Opening an app starts it again. Reboot behavior is controlled in Settings.")
-                .setNegativeButton("Cancel", null).setPositiveButton("Stop", (dialog, which) -> change.run()).show();
+                        + "打开应用就会重新启动。重启后的行为可在设置里控制。")
+                .setNegativeButton("取消", null).setPositiveButton("停止", (dialog, which) -> change.run()).show();
     }
 }

@@ -223,7 +223,7 @@ final class Ui {
         toolbar.setTitle(title);
         if (back) {
             toolbar.setNavigationIcon(R.drawable.ic_back);
-            toolbar.setNavigationContentDescription("Back");
+            toolbar.setNavigationContentDescription("返回");
             toolbar.setNavigationOnClickListener(v -> activity.finish());
         }
         toolbar.setTitleTextAppearance(activity, com.google.android.material.R.style.TextAppearance_Material3_TitleLarge);

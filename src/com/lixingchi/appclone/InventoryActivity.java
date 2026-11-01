@@ -29,9 +29,9 @@ abstract class InventoryActivity extends AppCompatActivity {
         body = list;
         status = list.status;
         status.setOnClickListener(v -> {
-            if (readError != null) new MaterialAlertDialogBuilder(this).setTitle("Could not refresh")
-                    .setMessage(readError).setNegativeButton("Close", null)
-                    .setPositiveButton("Retry", (dialog, which) -> refresh()).show();
+            if (readError != null) new MaterialAlertDialogBuilder(this).setTitle("无法刷新")
+                    .setMessage(readError).setNegativeButton("关闭", null)
+                    .setPositiveButton("重试", (dialog, which) -> refresh()).show();
         });
     }
 
@@ -55,8 +55,8 @@ abstract class InventoryActivity extends AppCompatActivity {
                 readError = (failure.getCause() == null ? failure : failure.getCause()).toString();
                 showReadState();
                 if (inventory != null) com.google.android.material.snackbar.Snackbar.make(body,
-                        "Refresh failed. Previous list kept.", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                        .setAction("Retry", v -> refresh()).show();
+                        "刷新失败，保留之前的列表。", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                        .setAction("重试", v -> refresh()).show();
             }
         }));
     }
@@ -84,9 +84,9 @@ abstract class InventoryActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 progress.dismiss();
-                if (!result.ok()) new MaterialAlertDialogBuilder(this).setTitle("Action failed")
-                        .setMessage(result.trim().isEmpty() ? "Root command failed." : result.trim())
-                        .setPositiveButton("Close", null).show();
+                if (!result.ok()) new MaterialAlertDialogBuilder(this).setTitle("操作失败")
+                        .setMessage(result.trim().isEmpty() ? "Root 命令执行失败。" : result.trim())
+                        .setPositiveButton("关闭", null).show();
                 else if (success != null) success.run();
                 if (refreshAfter && !isFinishing()) read(false);
             });
@@ -104,11 +104,11 @@ abstract class InventoryActivity extends AppCompatActivity {
         status.setFocusable(readError != null);
         status.setContentDescription(null);
         if (readError != null) {
-            status.setText(inventory == null ? "Could not read clone apps. Tap for details."
-                    : "Refresh failed; showing previous list. Tap for details.");
+            status.setText(inventory == null ? "无法读取分身应用，点按查看详情。"
+                    : "刷新失败，显示之前的列表。点按查看详情。");
             status.setContentDescription(status.getText() + " " + readError);
         } else if (request != null && !request.isDone()) {
-            status.setText(inventory == null ? "Reading clone apps…" : "Refreshing… Showing previous list.");
+            status.setText(inventory == null ? "正在读取分身应用…" : "正在刷新… 先显示之前的列表。");
         }
     }
 

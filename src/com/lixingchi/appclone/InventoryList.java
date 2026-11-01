@@ -48,7 +48,7 @@ final class InventoryList extends RecyclerView {
         }
         static Item profile(Inventory.Profile profile, int count) {
             return new Item(PROFILE, "profile:" + profile.clone.id + ":" + profile.serial, profile.clone.name,
-                    "User " + profile.clone.id + " · " + (profile.clone.running ? "Running" : "Stopped")
+                    "用户 " + profile.clone.id + " · " + (profile.clone.running ? "运行中" : "已停止")
                             + " · " + count + " apps", null, profile);
         }
         static Item empty(String title, String detail) {
@@ -72,7 +72,7 @@ final class InventoryList extends RecyclerView {
         status.setGravity(android.view.Gravity.CENTER_VERTICAL);
         status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
         notice.addView(status, Ui.weight(1));
-        retry = Ui.quiet(activity, "Retry");
+        retry = Ui.quiet(activity, "重试");
         retry.setVisibility(View.GONE);
         retry.setOnClickListener(v -> activity.refresh());
         notice.addView(retry);
@@ -166,7 +166,7 @@ final class InventoryList extends RecyclerView {
             detail = Ui.type(activity, "", com.google.android.material.R.style.TextAppearance_Material3_BodySmall, R.color.muted);
             labels.addView(title); labels.addView(subtitle); labels.addView(detail);
             line.addView(labels, Ui.weightWithStart(activity, 1, kind == INSTANCE || kind == EMPTY ? 0 : 16));
-            open = Ui.quiet(activity, "Open");
+            open = Ui.quiet(activity, "打开");
             open.setMinWidth(0);
             open.setMinimumWidth(0);
             open.setPadding(Ui.dp(activity, 12), 0, Ui.dp(activity, 12), 0);
@@ -186,21 +186,21 @@ final class InventoryList extends RecyclerView {
             icon.setImageDrawable(item.entry == null ? null : item.entry.icon);
             if (item.kind == HEADING) {
                 subtitle.setText(item.entry.app.pkg);
-                more.setContentDescription("Actions for " + item.title);
-                more.setTooltipText("App actions");
+                more.setContentDescription("操作：" + item.title);
+                more.setTooltipText("应用操作");
                 more.setOnClickListener(v -> {
                     PopupMenu menu = new PopupMenu(activity, more);
-                    menu.getMenu().add("Add another clone").setOnMenuItemClickListener(action -> {
+                    menu.getMenu().add("再加一个分身").setOnMenuItemClickListener(action -> {
                         AddClone.chooseProfile(activity, item.entry.app); return true;
                     });
-                    menu.getMenu().add("App details").setOnMenuItemClickListener(action -> {
+                    menu.getMenu().add("应用详情").setOnMenuItemClickListener(action -> {
                         activity.startActivity(new Intent(activity, AppDetailActivity.class)
                                 .putExtra(AppDetailActivity.EXTRA_PKG, item.entry.app.pkg)); return true;
                     });
                     menu.show();
                 });
             } else if (item.kind == INSTANCE || item.kind == APP_INSTANCE) {
-                subtitle.setText(item.kind == INSTANCE ? "User " + item.profile.clone.id : item.entry.app.pkg);
+                subtitle.setText(item.kind == INSTANCE ? "用户 " + item.profile.clone.id : item.entry.app.pkg);
                 AppControls.bind(activity, item.entry, item.profile, open, more);
             } else if (item.kind == PROFILE) {
                 avatar.setText(Integer.toString(item.profile.clone.id));
@@ -208,10 +208,10 @@ final class InventoryList extends RecyclerView {
                 detail.setVisibility(View.GONE);
                 labels.setBackground(Ui.selectable(activity));
                 labels.setMinimumHeight(Ui.dp(activity, 48));
-                labels.setContentDescription("View apps in " + item.title + " · " + item.detail);
+                labels.setContentDescription("查看应用：" + item.title + " · " + item.detail);
                 labels.setOnClickListener(v -> ProfileControls.open(activity, item.profile));
-                more.setContentDescription("Actions for " + Inventory.location(item.profile));
-                more.setTooltipText("Profile actions");
+                more.setContentDescription("操作：" + Inventory.location(item.profile));
+                more.setTooltipText("分身操作");
                 more.setOnClickListener(v -> ProfileControls.menu(activity, item.profile, more));
             } else {
                 subtitle.setText(item.detail);

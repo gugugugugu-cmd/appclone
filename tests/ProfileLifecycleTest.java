@@ -38,28 +38,37 @@ public final class ProfileLifecycleTest {
             }
         }
         Script ready = users().then("am get-started-user-state 11", 0, "RUNNING_UNLOCKED");
-        check(Clones.setRunning(11, true, ready).ok(), "ready profile is not restarted");
+        check(Clones.setRunning(11, true, ready, nap).ok(), "ready profile is not restarted");
         ready.done();
 
         Script start = users().then("am get-started-user-state 11", 0, "RUNNING_UNLOCKING")
                 .then(START, 0, "Profile 11 is unlocked.")
                 .then("am get-started-user-state 11", 0, "RUNNING_UNLOCKED");
-        check(Clones.setRunning(11, true, start).ok(), "manual start also waits for unlock");
+        check(Clones.setRunning(11, true, start, nap).ok(), "manual start also waits for unlock");
         start.done();
 
         for (int id : new int[] {11, 12}) {
-            Script stop = users().then("am stop-user -w -f " + id, 0, "")
+            // Stopping no longer blocks on -w; the state is polled instead.
+            Script stop = users().then("am stop-user -f " + id, 0, "")
+                    .then("am is-user-stopped " + id, 0, "false")
                     .then("am is-user-stopped " + id, 0, "true");
-            check(Clones.setRunning(id, false, stop).ok(), "stop only the selected clone, idempotently");
+            check(Clones.setRunning(id, false, stop, nap).ok(), "stop polls until the user is stopped");
             stop.done();
         }
-        Script aborted = users().then("am stop-user -w -f 12", 0, "")
-                .then("am is-user-stopped 12", 0, "false");
-        check(!Clones.setRunning(12, false, aborted).ok(), "aborted stop is not success");
+        Script aborted = users().then("am stop-user -f 12", 0, "")
+                .repeat("am is-user-stopped 12", 0, "false", stopPolls());
+        check(!Clones.setRunning(12, false, aborted, nap).ok(), "aborted stop is not success");
         aborted.done();
-        Script stopFailure = users().then("am stop-user -w -f 12", -1, "Switch failed");
-        check(!Clones.setRunning(12, false, stopFailure).ok(), "stop failure reported");
+        Script stopFailure = users().then("am stop-user -f 12", -1, "Switch failed");
+        check(!Clones.setRunning(12, false, stopFailure, nap).ok(), "stop failure reported");
         stopFailure.done();
+        // A stop that leaves the profile merely locked must say so, not "timed out":
+        // that is the state in which the next start cannot unlock at all.
+        Script lockedStop = users().then("am stop-user -f 12", 0, "")
+                .repeat("am is-user-stopped 12", 0, "RUNNING_LOCKED", stopPolls());
+        Shell.Result locked = Clones.setRunning(12, false, lockedStop, nap);
+        check(!locked.ok() && locked.out.contains("存储仍未锁定完成"), "half-stopped profile is reported");
+        lockedStop.done();
 
         for (String output : new String[] {"Success: user started", "Error: could not start user"}) {
             Script locked = users().then("am get-started-user-state 11", 0, "RUNNING_LOCKED")
@@ -109,6 +118,14 @@ public final class ProfileLifecycleTest {
         System.out.println("ok ProfileLifecycleTest");
     }
 
+    /** Polls a stop may take before its budget runs out. */
+    private static int stopPolls() {
+        return (int) (Clones.STOP_WAIT_MS / Clones.POLL_MS + 1);
+    }
+
+    /** Tests must not actually sleep while polling. */
+    static final java.util.function.LongConsumer nap = millis -> { };
+
     private static Script users() {
         return new Script().then("cmd user list -v", 0, USERS);
     }
@@ -116,6 +133,11 @@ public final class ProfileLifecycleTest {
     private static final class Script implements Function<String, Shell.Result> {
         final ArrayDeque<String> commands = new ArrayDeque<>();
         final ArrayDeque<Shell.Result> results = new ArrayDeque<>();
+        /** Answer served once the queue is empty, for a polling loop. */
+        String stickyCommand;
+        Shell.Result stickyResult;
+        int stickyBudget;
+        int stickyHits;
 
         Script then(String command, int code, String output) {
             commands.add(command);
@@ -123,11 +145,25 @@ public final class ProfileLifecycleTest {
             return this;
         }
 
+        /** Answers {@code command} with {@code output} for up to {@code times} polls. */
+        Script repeat(String command, int code, String output, int times) {
+            stickyCommand = command;
+            stickyResult = new Shell.Result(code, output);
+            stickyBudget = times;
+            return this;
+        }
+
         @Override public Shell.Result apply(String command) {
-            check(!commands.isEmpty(), "unexpected command: " + command);
-            String expected = commands.remove();
-            check(expected.equals(command), "expected " + expected + ", got " + command);
-            return results.remove();
+            // Queued answers win; the sticky one only serves the polls that follow.
+            if (!commands.isEmpty()) {
+                String expected = commands.remove();
+                check(expected.equals(command), "expected " + expected + ", got " + command);
+                return results.remove();
+            }
+            check(command.equals(stickyCommand), "unexpected command: " + command);
+            check(stickyHits < stickyBudget, "poll budget exhausted: " + command);
+            stickyHits++;
+            return stickyResult;
         }
 
         void done() {
