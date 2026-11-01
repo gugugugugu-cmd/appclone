@@ -60,7 +60,7 @@ public final class ShellTest {
                     "never replay a command after the process started: " + mode);
         }
         Shell.Result fallbackTimeout = Shell.run(missing, child("sleep"), 200, TimeUnit.MILLISECONDS);
-        check(!fallbackTimeout.ok() && fallbackTimeout.out.contains("timed out"), "fallback retains the timeout");
+        check(!fallbackTimeout.ok() && fallbackTimeout.out.contains("超时"), "fallback retains the timeout");
         Thread.currentThread().interrupt();
         Shell.Result interrupted = Shell.run(child("sleep"), child("output"), 10, TimeUnit.SECONDS);
         check(!interrupted.ok() && interrupted.out.contains("interrupted") && Thread.currentThread().isInterrupted(),

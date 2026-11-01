@@ -39,11 +39,13 @@ public final class MaterialScreensTest {
         Settings.systemApps(activity, false);
         activity.inventory = new Inventory(Collections.emptyList(), Collections.emptyList());
         activity.render();
-        assertTrue(text(activity.body).contains("还没有分身应用"));
+        String empty = text(activity.body);
+        assertTrue("empty state: " + empty, empty.contains("还没有分身应用"));
         activity.inventory = fixture(); activity.render();
-        assertTrue(text(activity.body).contains("Chat\ncom.chat\n1 个分身"));
-        assertTrue(text(activity.body).contains("Personal\n用户 11"));
-        assertTrue(text(activity.body).contains("已停用 · 分身已停止"));
+        String listed = text(activity.body);
+        assertTrue("heading: " + listed, listed.contains("Chat\ncom.chat\n1 个分身"));
+        assertTrue("subtitle: " + listed, listed.contains("Personal\n用户 11"));
+        assertTrue("state: " + listed, listed.contains("已停用 · 分身已停止"));
         assertFalse(text(activity.body).contains("管理"));
         assertFalse(text(activity.body).contains("System fixture"));
         Settings.systemApps(activity, true); activity.render();
@@ -61,8 +63,9 @@ public final class MaterialScreensTest {
         Intent appIntent = new Intent().putExtra(AppDetailActivity.EXTRA_PKG, "com.chat");
         ActivityController<AppDetailActivity> app = Robolectric.buildActivity(AppDetailActivity.class, appIntent).create();
         app.get().inventory = fixture(); app.get().render();
-        assertTrue(text(app.get().body).contains("已停用 · 分身已停止"));
-        assertTrue(text(app.get().body).contains("Personal\n用户 11"));
+        String detail = text(app.get().body);
+        assertTrue("detail state: " + detail, detail.contains("已停用 · 分身已停止"));
+        assertTrue("detail subtitle: " + detail, detail.contains("Personal\n用户 11"));
         assertFalse(findText(row(app.get().body, 1), "打开").isEnabled());
         app.destroy();
         Intent profileIntent = new Intent().putExtra(CloneDetailActivity.EXTRA_ID, 11)
@@ -139,7 +142,7 @@ public final class MaterialScreensTest {
         prefs.edit().putString("11:42:com.chat", state.encode()).commit();
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state.withMode(1));
         dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertEquals("Restore previous", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
+        assertEquals("恢复之前设置", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).performClick();
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();

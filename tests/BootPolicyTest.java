@@ -92,7 +92,7 @@ public final class BootPolicyTest {
         policy.apply(denied, BootPolicy.STOP, () -> true, none);
         none.done();
         policy.fail(policy.begin(), BootPolicy.STOP, "Cannot schedule");
-        check(policy.status().contains("无法调度"), "scheduling failure saved");
+        check(policy.status().contains("重启操作失败：Cannot schedule"), "scheduling failure saved: " + policy.status());
         policy.save(BootPolicy.SYSTEM);
         policy.apply(denied, BootPolicy.STOP, () -> true, none);
         policy.fail(denied, BootPolicy.STOP, "stale failure");

@@ -15,6 +15,11 @@ final class ScreenTestSupport {
         return holder.itemView;
     }
 
+    /** Appends the collected text to a failing assertion message. */
+    static void dumpOn(StringBuilder sink, String label, View view) {
+        sink.append('\n').append(label).append(": ").append(text(view));
+    }
+
     static String text(View view) {
         StringBuilder result = new StringBuilder();
         if (view instanceof InventoryList) {
