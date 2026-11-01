@@ -76,7 +76,7 @@ final class BackgroundPolicy {
         synchronized (Clones.class) {
             State current = fresh(user, serial, pkg, preview);
             if (previous(user, serial, pkg) != null) throw new IllegalStateException("请先恢复或清除已保存的设置。");
-            if (current.uidMode != -1) throw new IllegalStateException("A UID-wide override is controlled elsewhere; nothing changed.");
+            if (current.uidMode != -1) throw new IllegalStateException("UID 级覆盖由别处控制，未做改动。");
             if (current.mode == RESTRICTED) throw new IllegalStateException("已受限，没有改动。");
             // Persist before root so interruption or a partial failure cannot erase the restore point.
             save(key(user, serial, pkg), current.encode());

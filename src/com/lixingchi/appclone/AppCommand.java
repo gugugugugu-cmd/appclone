@@ -84,7 +84,7 @@ public final class AppCommand {
                                       int mode, Device device) throws Exception {
         BackgroundPolicy.State current = read(user, serial, pkg, device);
         if (!current.equals(expected)) throw new IllegalStateException("后台设置已改变，请重新打开控制面板。");
-        if (current.uidMode != -1) throw new IllegalStateException("A UID-wide override is controlled elsewhere; nothing changed.");
+        if (current.uidMode != -1) throw new IllegalStateException("UID 级覆盖由别处控制，未做改动。");
         BackgroundPolicy.State desired = current.withMode(mode);
         device.background(current.uid, pkg, mode);
         if (!read(user, serial, pkg, device).equals(desired))

@@ -50,8 +50,8 @@ public final class ProfileStart {
         boolean accepted = device.unlocked(user) || device.unlockCached(user);
         while (!device.unlocked(user)) {
             if (System.nanoTime() >= deadline) throw new IllegalStateException(accepted
-                    ? "分身 " + user + " did not become ready. Refresh and retry."
-                    : "分身 " + user + " is locked. Lock and unlock the main user with its PIN, pattern or password, then retry.");
+                    ? "分身 " + user + " 尚未就绪，请刷新后重试。"
+                    : "分身 " + user + " 处于锁定状态。请先用 PIN、图案或密码锁定并解锁主用户，然后重试。");
             Thread.sleep(100);
         }
         unchanged(device, user, serial);

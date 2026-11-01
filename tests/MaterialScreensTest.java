@@ -63,7 +63,7 @@ public final class MaterialScreensTest {
         app.get().inventory = fixture(); app.get().render();
         assertTrue(text(app.get().body).contains("已停用 · 分身已停止"));
         assertTrue(text(app.get().body).contains("个人\n用户 11"));
-        assertFalse(findText(row(app.get().body, 1), "Open").isEnabled());
+        assertFalse(findText(row(app.get().body, 1), "打开").isEnabled());
         app.destroy();
         Intent profileIntent = new Intent().putExtra(CloneDetailActivity.EXTRA_ID, 11)
                 .putExtra(CloneDetailActivity.EXTRA_SERIAL, 42L);
@@ -129,10 +129,10 @@ public final class MaterialScreensTest {
         BackgroundPolicy.State state = new BackgroundPolicy.State(1110123, 1234, 0, -1);
         BackgroundControls.show(activity, inventory.app("com.chat"), inventory.profile(11), policy, state);
         AlertDialog dialog = (AlertDialog) org.robolectric.shadows.ShadowDialog.getLatestDialog();
-        assertTrue(text(dialog.getWindow().getDecorView()).contains("Personal · User 11"));
+        assertTrue(text(dialog.getWindow().getDecorView()).contains("个人 · 用户 11"));
         assertTrue(text(dialog.getWindow().getDecorView()).contains("通知和任务可能被延迟"));
-        assertEquals("Restrict", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
-        assertEquals("Keep current", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).getText().toString());
+        assertEquals("限制", dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
+        assertEquals("保持当前", dialog.getButton(AlertDialog.BUTTON_NEGATIVE).getText().toString());
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick();
         org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         assertTrue(prefs.getAll().isEmpty());

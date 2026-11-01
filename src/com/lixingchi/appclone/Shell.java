@@ -83,7 +83,7 @@ final class Shell {
         } catch (IOException e) {
             return new Result(-1, fallback == null ? e.toString()
                     : "无法启动 root shell。请确认 Root 已生效、且 Root 管理器里允许了 App Clone，"
-                    + "then reopen the app and tap Retry. LSPosed scope alone does not grant root.\n" + e);
+                    + "然后重开应用点重试。只在 LSPosed 里勾选作用域并不会授予 root。\n" + e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return new Result(-1, "Root 命令被中断，请刷新分身状态后重试。");

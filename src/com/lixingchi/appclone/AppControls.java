@@ -98,7 +98,7 @@ final class AppControls {
         }, null);
         if (!running) { change.run(); return; }
         new MaterialAlertDialogBuilder(activity).setTitle("停止分身？")
-                .setMessage(Inventory.location(profile) + "\n\nStops ALL apps and notifications in this profile, keeping data. "
+                .setMessage(Inventory.location(profile) + "\n\n将停止该分身里的全部应用和通知，数据保留。"
                         + "打开应用就会重新启动。重启后的行为可在设置里控制。")
                 .setNegativeButton("取消", null).setPositiveButton("停止", (dialog, which) -> change.run()).show();
     }

@@ -25,9 +25,9 @@ final class BackgroundControls {
         BackgroundPolicy.State saved = policy.previous(user, serial, pkg);
         String target = entry.app.label + "\n" + Inventory.location(profile);
         String message = target + "\n\nCurrent: " + BackgroundPolicy.name(state.mode)
-                + (state.uidMode == -1 ? "" : "\nUID-wide override: " + BackgroundPolicy.name(state.uidMode) + " (managed elsewhere)")
-                + (saved == null ? "\nNo previous setting saved." : "\nPrevious: " + BackgroundPolicy.name(saved.mode))
-                + "\n\nRestrict limits Android background activity (RUN_ANY_IN_BACKGROUND). Notifications and jobs may be delayed. "
+                + (state.uidMode == -1 ? "" : "\nUID 级覆盖：" + BackgroundPolicy.name(state.uidMode) + "（由别处管理）")
+                + (saved == null ? "\n没有保存过之前的设置。" : "\n之前：" + BackgroundPolicy.name(saved.mode))
+                + "\n\n「限制」会限制 Android 后台活动（RUN_ANY_IN_BACKGROUND），通知和任务可能被延迟。"
                 + "这不会停止分身、停用应用或冻结其进程。在你选择一个操作前不会改动任何设置。";
         MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(activity).setTitle("后台活动")
                 .setMessage(message).setNegativeButton("保持当前", null);

@@ -65,15 +65,15 @@ public final class InlineInventoryTest {
         RecyclerView.Adapter adapter = activity.body.getAdapter();
         RecyclerView.ViewHolder holder = adapter.createViewHolder(activity.body, adapter.getItemViewType(2));
         adapter.bindViewHolder(holder, 2);
-        assertFalse(findText(holder.itemView, "Open").isEnabled());
+        assertFalse(findText(holder.itemView, "打开").isEnabled());
         adapter.bindViewHolder(holder, 3);
-        assertTrue(findText(holder.itemView, "Open").isEnabled());
+        assertTrue(findText(holder.itemView, "打开").isEnabled());
         ImageButton more = find(holder.itemView, ImageButton.class);
         assertEquals("Actions for Chat in Account 1 · User 12", more.getContentDescription());
         layout(holder.itemView, Ui.dp(activity, 320), Ui.dp(activity, 200));
         assertEquals(Ui.dp(activity, 48), more.getWidth());
         assertEquals(Ui.dp(activity, 48), more.getHeight());
-        findText(holder.itemView, "Open").performClick();
+        findText(holder.itemView, "打开").performClick();
         Intent launch = shadowOf(activity).getNextStartedActivity();
         assertEquals(LaunchActivity.class.getName(), launch.getComponent().getClassName());
         assertEquals(12, launch.getIntExtra(LaunchActivity.EXTRA_USER, -1));

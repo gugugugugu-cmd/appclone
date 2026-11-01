@@ -41,16 +41,18 @@ public final class ShellTest {
         check(recovered.ok() && recovered.out.contains("error output"),
                 "missing PATH executable can use the explicit fallback, with stderr captured: " + recovered.out);
         Shell.Result noFallback = Shell.run(missing, 10, TimeUnit.SECONDS);
-        check(!noFallback.ok() && !noFallback.out.contains("root manager"), "non-root commands keep the original startup error");
+        // Non-root failures surface the raw exception, not the recovery guidance.
+        check(!noFallback.ok() && noFallback.out.contains("Exception"),
+                "non-root commands keep the original startup error: " + noFallback.out);
         Shell.Result started = Shell.run(child("output"), child("fail"), 10, TimeUnit.SECONDS);
         check(started.ok(), "successful startup must not try the fallback");
         Shell.Result unavailable = Shell.run(missing, missing, 10, TimeUnit.SECONDS);
-        check(!unavailable.ok() && unavailable.out.contains("root manager")
+        check(!unavailable.ok() && unavailable.out.contains("Root 管理器")
                         && unavailable.out.contains("appclone-test-missing-su"),
                 "missing root frontend gives recovery instructions and original failure: " + unavailable.out);
         Shell.Result denied = Shell.run(new ProcessBuilder(System.getProperty("java.home")),
                 child("output"), 10, TimeUnit.SECONDS);
-        check(!denied.ok() && denied.out.contains("root manager"), "permission failure must not try another executable: " + denied.out);
+        check(!denied.ok() && denied.out.contains("Root 管理器"), "permission failure must not try another executable: " + denied.out);
         for (String mode : new String[] {"fail", "not-found", "sleep"}) {
             Shell.Result noReplay = Shell.run(child(mode), child("output"),
                     mode.equals("sleep") ? 200 : 10000, TimeUnit.MILLISECONDS);
